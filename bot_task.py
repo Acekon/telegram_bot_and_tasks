@@ -21,8 +21,8 @@ def send_message(send_chat_id):
     messages_db = c.fetchall()
     message_db = messages_db[random.randint(0, len(messages_db) - 1)]
     message_id, text, last_sent = message_db
-    debug_text = f"{message_id}, {text}, {last_sent},{(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}"
-    bot.send_message(chat_id=send_chat_id, text=f'{text} {debug_text}')
+    #debug_text = f"{message_id}, {text}, {last_sent},{(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}"
+    bot.send_message(chat_id=send_chat_id, text=f'{text}')
     c.execute('UPDATE messages SET last_send=? WHERE ids=?', (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), message_id))
     conn.commit()
     conn.close()
