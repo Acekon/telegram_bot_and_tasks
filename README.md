@@ -1,9 +1,6 @@
-# telegram_bot_and_tasks
 # Messgage bot 0.3.0
 
-```text
-First start
-```
+First start:
 Create table
 ```bash
 CREATE TABLE "messages" (
@@ -15,7 +12,7 @@ CREATE TABLE "messages" (
 ```
 Create folder for image
 ```bash
-mkdir img/
+mkdir img
 ```
 
 
