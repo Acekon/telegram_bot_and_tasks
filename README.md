@@ -17,6 +17,10 @@ Create folder for image
 mkdir img/
 ```
 
+
+```bash
+nano /lib/systemd/system/bot_task_0.3.service
+```
 ```text
 [Unit]
 Description=Message Bot v0.3
