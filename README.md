@@ -1,5 +1,8 @@
 # Messgage bot 0.3.0
-
+mess_task.py script bot publishes posts in the channel according to the scheduler
+mess_bot script bot control DB:
+- add new message;
+- add new img for message;
 ```text
 First start
 ```
