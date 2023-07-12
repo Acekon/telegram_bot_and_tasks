@@ -28,8 +28,8 @@ After=network.target
 
 [Service]
 EnvironmentFile=/etc/environment
-ExecStart=python3 joke_bot.py
-ExecReload=python3 joke_bot.py
+ExecStart=python3 mess_bot.py
+ExecReload=python3 mess_bot.py
 WorkingDirectory=/opt/bot/0.3/
 KillMode=process
 Restart=always
@@ -47,33 +47,28 @@ WorkingDirectory — путь к папке в которой файл запу�
 ```
 ## Add service
 ```bash
-systemctl enable joke_bot_0.3
-systemctl start joke_bot_0.3
-systemctl status joke_bot_0.3
+systemctl enable mess_bot_0.3
+systemctl start mess_bot_0.3
+systemctl status mess_bot_0.3
 
-systemctl enable bot_task_0.3
-systemctl start bot_task_0.3
-systemctl status bot_task_0.3
+systemctl enable mess_task_0.3
+systemctl start mess_task_0.3
+systemctl status mess_task_0.3
 ```
 ## Disable & remove service
 ```bash
-systemctl stop joke_bot_0.3
-systemctl disable joke_bot_0.3
-rm /etc/systemd/system/joke_bot_0.3.service
-rm /usr/lib/systemd/system/joke_bot_0.3.service
+systemctl stop mess_bot_0.3
+systemctl disable mess_bot_0.3
+rm /etc/systemd/system/mess_bot_0.3.service
+rm /usr/lib/systemd/system/mess_bot_0.3.service
 systemctl daemon-reload
 systemctl reset-failed
 ```
 
 ## Update
 ```bash
-systemctl enable joke_bot_0.3
-systemctl restart joke_bot_0.3
-systemctl enable bot_task_0.3
-systemctl restart bot_task_0.3
+systemctl enable mess_bot_0.3
+systemctl restart mess_bot_0.3
+systemctl enable mess_task_0.3
+systemctl restart mess_task_0.3
 ```
-## Change log
-``` 
-
-Joke bot 0.3 start 29.06.2023
-Refactor codes start 29.06.2023
