@@ -1,6 +1,8 @@
 # Messgage bot 0.3.0
 
-First start:
+```text
+First start
+```
 Create table
 ```bash
 CREATE TABLE "messages" (
@@ -12,24 +14,19 @@ CREATE TABLE "messages" (
 ```
 Create folder for image
 ```bash
-mkdir img
+mkdir img/
 ```
 
-
-```bash
-/nan/joke_bot_0.3.service
-/lib/systemd/system/joke_task_0.3.service
-```
 ```text
 [Unit]
-Description=Messgage Bot v0.3
+Description=Message Bot v0.3
 After=network.target
 
 [Service]
 EnvironmentFile=/etc/environment
 ExecStart=python3 joke_bot.py
 ExecReload=python3 joke_bot.py
-WorkingDirectory=/opt/jokebot/0.3/
+WorkingDirectory=/opt/bot/0.3/
 KillMode=process
 Restart=always
 RestartSec=5
@@ -50,9 +47,9 @@ systemctl enable joke_bot_0.3
 systemctl start joke_bot_0.3
 systemctl status joke_bot_0.3
 
-systemctl enable joke_task_0.3
-systemctl start joke_task_0.3
-systemctl status joke_task_0.3
+systemctl enable bot_task_0.3
+systemctl start bot_task_0.3
+systemctl status bot_task_0.3
 ```
 ## Disable & remove service
 ```bash
@@ -68,10 +65,11 @@ systemctl reset-failed
 ```bash
 systemctl enable joke_bot_0.3
 systemctl restart joke_bot_0.3
-systemctl enable joke_task_0.3
-systemctl restart joke_task_0.3
+systemctl enable bot_task_0.3
+systemctl restart bot_task_0.3
 ```
 ## Change log
 ``` 
-Joke bot 0.3 start #29.06.2023
+
+Joke bot 0.3 start 29.06.2023
 Refactor codes start 29.06.2023
