@@ -35,6 +35,7 @@ send_chat_id = '123456789'  # Set the chat ID where you want the bot to send mes
 bot_token = 'YOUR_TELEGRAM_BOT_TOKEN'  # Replace this with your Telegram bot token
 admin_id = 'YOUR_ADMIN_CHAT_ID'  # Replace this with your admin chat ID
 ```
+Replace `YOUR_TELEGRAM_BOT_TOKEN` and `YOUR_ADMIN_CHAT_ID` with your Telegram bot token and admin chat ID respectively.
 Create table on my_database.db
 ```MSSQL
 CREATE TABLE "messages" (
@@ -44,8 +45,8 @@ CREATE TABLE "messages" (
 	PRIMARY KEY("ids" AUTOINCREMENT)
 );
 ```
+Create table dir img
 
-Replace `YOUR_TELEGRAM_BOT_TOKEN` and `YOUR_ADMIN_CHAT_ID` with your Telegram bot token and admin chat ID respectively.
 
 ## Functionality
 
