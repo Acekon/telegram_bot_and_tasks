@@ -45,7 +45,7 @@ CREATE TABLE "messages" (
 	PRIMARY KEY("ids" AUTOINCREMENT)
 );
 ```
-Create table dir img
+Create dir img
 
 
 ## Functionality
