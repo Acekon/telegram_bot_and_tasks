@@ -21,8 +21,7 @@ cd <repository-folder>
 2. Install the required dependencies:
 
 ```bash
-pip install telebot
-pip install schedule
+pip install -r requirements.txt
 ```
 
 3. Create a file named `conf.py` in the same directory as the bot script and set the required configuration variables:
