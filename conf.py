@@ -6,7 +6,7 @@ admin_id = f'{os.environ.get("tg_admin_id")}'
 send_chat_id = f'{os.environ.get("tg_id_channel")}'
 
 
-start_times = ['08:00']
+start_times = ['08:00','12:00']
 bot = telebot.TeleBot(bot_token)
 
 def db_path():
