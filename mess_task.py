@@ -9,7 +9,6 @@ from conf import start_times, db_path, send_chat_id, bot, admin_id
 
 
 def send_message(send_chat_id):
-    print(f"Debug {(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))} sending")
     conn = sqlite3.connect(db_path())
     c = conn.cursor()
     c.execute('SELECT * FROM messages WHERE last_send is NULL')
