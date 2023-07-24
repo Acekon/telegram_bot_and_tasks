@@ -68,6 +68,61 @@ def command_check_status(message):
     bot.send_message(admin_id, f"{text_sending_stats}")
 
 
+@bot.message_handler(commands=['getmess'])
+def command_get_mess(message):
+    if not message.chat.id == admin_id:
+        return bot.send_message(message.chat.id, text=f'{message.chat.first_name} you do not have permission')
+    bot.send_message(admin_id, "Enter ID message")
+    bot.register_next_step_handler(message, get_message_id)
+
+
+def get_message_id(message: Message):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f'SELECT ids, text_message FROM messages WHERE ids="{message.text}"')
+        mess = c.fetchone()
+        conn.commit()
+        conn.close()
+        if mess:
+            matching_files = []
+            files_name = []
+            keyboard = types.InlineKeyboardMarkup(row_width=2)
+            buttons = [
+                types.InlineKeyboardButton('💥 Remove message and img', callback_data=f'mess|remove:{message.text}'),
+                types.InlineKeyboardButton('💥 Remove IMG', callback_data=f'mess|removeimg:{message.text}'),
+                types.InlineKeyboardButton('🟢 Replace', callback_data=f'mess|replace:{message.text}'),
+                types.InlineKeyboardButton('🟡 Cancel', callback_data=f'mess|cancel')]
+            keyboard.add(*buttons)
+            for file_name in os.listdir('img/'):
+                if fnmatch.fnmatch(file_name, f'{message.text}_*.png'):
+                    matching_files.append(os.path.abspath('img//' + file_name))
+                    files_name.append(file_name)
+            if matching_files:
+                create_image_collage(matching_files)
+                bot.send_photo(chat_id=send_chat_id, photo=open('collage.png', 'rb'),
+                               caption=f'{mess[1]}\n\nFile list:\n{files_name}', reply_markup=keyboard)
+                if os.path.isfile('collage.png'):
+                    os.remove('collage.png')
+            else:
+                bot.send_message(message.chat.id, f"{mess[1]}!", reply_markup=keyboard)
+        else:
+            bot.send_message(message.chat.id, f"ID is not found")
+    except sqlite3.OperationalError as err:
+        bot.send_message(admin_id, f"Error: {err}")
+
+
+
+def create_image_collage(image_paths, output_path='collage.png'):
+    image_size = (200, 200)
+    collage_size = (image_size[0] * len(image_paths), image_size[1])
+    collage = Image.new('RGB', collage_size)
+    for i, image_path in enumerate(image_paths):
+        image = Image.open(image_path)
+        image = image.resize(image_size)
+        collage.paste(image, (i * image_size[0], 0))
+    collage.save(output_path)
+
 def check_last_sent_status():
     conn = sqlite3.connect(db_path())
     c = conn.cursor()
