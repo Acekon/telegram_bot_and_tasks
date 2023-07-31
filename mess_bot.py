@@ -1,7 +1,12 @@
+import fnmatch
+import os
 import random
 import string
 
 import requests
+import telebot
+from PIL import Image
+from telebot import types
 from telebot.types import CallbackQuery, Message
 import sqlite3
 from conf import bot, admin_id, db_path, send_chat_id
@@ -63,6 +68,8 @@ def upload_img(message: Message, name_img):
 
 @bot.message_handler(commands=['status'])
 def command_check_status(message):
+    if not message.chat.id == admin_id:
+        return bot.send_message(message.chat.id, text=f'{message.chat.first_name} you do not have permission')
     sending_stats = check_last_sent_status()
     text_sending_stats = f'All messages = {sending_stats[0]}\nSend = {sending_stats[1]}\nNot Send = {sending_stats[2]}'
     bot.send_message(admin_id, f"{text_sending_stats}")
@@ -112,6 +119,40 @@ def get_message_id(message: Message):
         bot.send_message(admin_id, f"Error: {err}")
 
 
+@bot.callback_query_handler(func=lambda call: call.data.startswith('mess|remove'))
+def command_mess_remove(message: CallbackQuery):
+    if not message.from_user.id == admin_id:
+        return bot.send_message(message.from_user.id, text=f'{message.from_user.first_name} you do not have permission')
+    if message.message.content_type == 'photo':
+        pass
+    elif message.message.content_type == 'text':
+        pass
+    else:
+        bot.send_message(admin_id, f"Error: content_type not supported ({message.message.content_type})")
+
+
+def remove_mess(id_mess=55):
+    try:
+        matching_files = []
+        for file_name in os.listdir('img/'):
+            if fnmatch.fnmatch(file_name, f'{id_mess}_*.png'):
+                matching_files.append(os.path.abspath('img//' + file_name))
+        for name_file in matching_files:
+            if os.path.isfile(name_file):
+                os.remove(name_file)
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        count = c.execute(f'DELETE FROM messages WHERE ids = "{id_mess}"').rowcount
+        conn.commit()
+        conn.close()
+        if count != 0:
+            bot.send_message(admin_id, f"ID= {id_mess}. Removed from DB")
+        else:
+            bot.send_message(admin_id, f"ID= {id_mess}. Not found from DB")
+
+    except sqlite3.OperationalError as err:
+        bot.send_message(admin_id, f"Error: {err}")
+
 
 def create_image_collage(image_paths, output_path='collage.png'):
     image_size = (200, 200)
@@ -122,6 +163,7 @@ def create_image_collage(image_paths, output_path='collage.png'):
         image = image.resize(image_size)
         collage.paste(image, (i * image_size[0], 0))
     collage.save(output_path)
+
 
 def check_last_sent_status():
     conn = sqlite3.connect(db_path())
@@ -134,7 +176,6 @@ def check_last_sent_status():
     conn.commit()
     conn.close()
     return lats_sent
-
 
 if __name__ == '__main__':
     bot.infinity_polling(timeout=60, long_polling_timeout=30)
