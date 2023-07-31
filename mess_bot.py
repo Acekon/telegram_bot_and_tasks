@@ -107,14 +107,14 @@ def get_message_id(message: Message):
                     files_name.append(file_name)
             if matching_files:
                 create_image_collage(matching_files)
-                bot.send_photo(chat_id=send_chat_id, photo=open('collage.png', 'rb'),
+                bot.send_photo(chat_id=admin_id, photo=open('collage.png', 'rb'),
                                caption=f'{mess[1]}\n\nFile list:\n{files_name}', reply_markup=keyboard)
                 if os.path.isfile('collage.png'):
                     os.remove('collage.png')
             else:
-                bot.send_message(message.chat.id, f"{mess[1]}!", reply_markup=keyboard)
+                bot.send_message(admin_id, f"{mess[1]}!", reply_markup=keyboard)
         else:
-            bot.send_message(message.chat.id, f"ID is not found")
+            bot.send_message(admin_id, f"ID is not found")
     except sqlite3.OperationalError as err:
         bot.send_message(admin_id, f"Error: {err}")
 
