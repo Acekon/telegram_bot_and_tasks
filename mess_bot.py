@@ -124,9 +124,9 @@ def command_mess_remove(message: CallbackQuery):
     if not message.from_user.id == admin_id:
         return bot.send_message(message.from_user.id, text=f'{message.from_user.first_name} you do not have permission')
     if message.message.content_type == 'photo':
-        pass
+        remove_mess(message.data.split(':')[1])
     elif message.message.content_type == 'text':
-        pass
+        remove_mess(message.data.split(':')[1])
     else:
         bot.send_message(admin_id, f"Error: content_type not supported ({message.message.content_type})")
 
