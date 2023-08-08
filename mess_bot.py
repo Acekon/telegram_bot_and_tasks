@@ -4,7 +4,6 @@ import random
 import string
 
 import requests
-import telebot
 from PIL import Image
 from telebot import types
 from telebot.types import CallbackQuery, Message
@@ -58,7 +57,7 @@ def upload_img(message: Message, name_img):
     if response_img.status_code != 200:
         return bot.send_message(admin_id, f"File not upload in server Http code: {response_img.status_code}")
     try:
-        random_prefix_file = ''.join(random.choice(string.ascii_letters) for i in range(4))
+        random_prefix_file = ''.join(random.choice(string.ascii_letters) for i in range(6))
         with open(f"img/{name_img}_{random_prefix_file}.png", 'wb') as f:
             f.write(response_img.content)
         return bot.send_message(admin_id, f"File {name_img}_{random_prefix_file}.png is uploads")
@@ -71,8 +70,29 @@ def command_check_status(message):
     if not message.chat.id == admin_id:
         return bot.send_message(message.chat.id, text=f'{message.chat.first_name} you do not have permission')
     sending_stats = check_last_sent_status()
-    text_sending_stats = f'All messages = {sending_stats[0]}\nSend = {sending_stats[1]}\nNot Send = {sending_stats[2]}'
-    bot.send_message(admin_id, f"{text_sending_stats}")
+    text_sending_stats = (f'All messages = {sending_stats[0]}\n'
+                          f'Not Send = {sending_stats[2]}\n'
+                          f'Available to send = {sending_stats[1]}')
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    buttons = [
+        types.InlineKeyboardButton('Reset sending message', callback_data=f'reset'), ]
+    keyboard.add(*buttons)
+    bot.send_message(admin_id, f"{text_sending_stats}", reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('reset'))
+def command_mess_reset(message: CallbackQuery):
+    if not message.from_user.id == admin_id:
+        return bot.send_message(message.from_user.id, text=f'{message.from_user.first_name} you do not have permission')
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute('UPDATE messages SET last_send = NULL;')
+        conn.commit()
+        bot.send_message(chat_id=admin_id, text=f'History sending messages is reset, new iteration started.')
+        conn.close()
+    except sqlite3.OperationalError as err:
+        bot.send_message(admin_id, f"Not reset! Error: {err}")
 
 
 @bot.message_handler(commands=['getmess'])
@@ -97,7 +117,7 @@ def get_message_id(message: Message):
             keyboard = types.InlineKeyboardMarkup(row_width=2)
             buttons = [
                 types.InlineKeyboardButton('💥 Remove message and img', callback_data=f'mess|remove:{message.text}'),
-                types.InlineKeyboardButton('💥 Remove IMG', callback_data=f'mess|removeimg:{message.text}'),
+                types.InlineKeyboardButton('💥 Remove IMG', callback_data=f'mess|remove|img:{message.text}'),
                 types.InlineKeyboardButton('🟢 Replace', callback_data=f'mess|replace:{message.text}'),
                 types.InlineKeyboardButton('🟡 Cancel', callback_data=f'mess|cancel')]
             keyboard.add(*buttons)
@@ -131,7 +151,7 @@ def command_mess_remove(message: CallbackQuery):
         bot.send_message(admin_id, f"Error: content_type not supported ({message.message.content_type})")
 
 
-def remove_mess(id_mess=55):
+def remove_mess(id_mess):
     try:
         matching_files = []
         for file_name in os.listdir('img/'):
@@ -176,6 +196,7 @@ def check_last_sent_status():
     conn.commit()
     conn.close()
     return lats_sent
+
 
 if __name__ == '__main__':
     bot.infinity_polling(timeout=60, long_polling_timeout=30)
