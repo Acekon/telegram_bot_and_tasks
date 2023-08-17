@@ -64,7 +64,7 @@ def run():
         schedule.every().day.at(times).do(send_message,send_chat_id=f'{send_chat_id}')
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(0.5)
 
 
 if __name__ == '__main__':
