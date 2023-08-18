@@ -2,6 +2,7 @@ import fnmatch
 import os
 import random
 import string
+import time
 
 import requests
 from PIL import Image
@@ -71,8 +72,8 @@ def command_check_status(message):
         return bot.send_message(message.chat.id, text=f'{message.chat.first_name} you do not have permission')
     sending_stats = check_last_sent_status()
     text_sending_stats = (f'All messages = {sending_stats[0]}\n'
-                          f'Not Send = {sending_stats[2]}\n'
-                          f'Available to send = {sending_stats[1]}')
+                          f'Available Send = {sending_stats[2]}\n'
+                          f'Sented = {sending_stats[1]}')
     keyboard = types.InlineKeyboardMarkup(row_width=1)
     buttons = [
         types.InlineKeyboardButton('Reset sending message', callback_data=f'reset'), ]
@@ -197,6 +198,33 @@ def check_last_sent_status():
     conn.close()
     return lats_sent
 
+
+@bot.message_handler(commands=['search'])
+def command_get_search(message):
+    if not message.chat.id == admin_id:
+        return bot.send_message(message.chat.id, text=f'{message.chat.first_name} you do not have permission')
+    bot.send_message(admin_id, "Enter string for search")
+    bot.register_next_step_handler(message, get_message_search)
+
+
+def get_message_search(message: Message):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f'SELECT ids, text_message FROM messages WHERE text_message like "%{message.text}%"')
+        messages = c.fetchall()
+        conn.commit()
+        conn.close()
+        if not messages:
+            bot.send_message(admin_id, f"Not found")
+        if len(messages) <= 10:
+            for mess in messages:
+                bot.send_message(admin_id, f"ID = {mess[0]}\n{mess[1]}")
+                time.sleep(0.2)
+        else:
+            bot.send_message(admin_id, f"Find {len(messages)} please specify your request ")
+    except sqlite3.OperationalError as err:
+        bot.send_message(admin_id, f"Error: {err}")
 
 if __name__ == '__main__':
     bot.infinity_polling(timeout=60, long_polling_timeout=30)
