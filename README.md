@@ -8,6 +8,10 @@ This repository contains a Telegram bot script that allows you to send messages 
 
 - Python 3.x
 - Telebot library
+- fnmatch
+- PIL, Image
+- sqlite3
+
 
 ### Installation
 
