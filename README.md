@@ -11,6 +11,8 @@ This repository contains a Telegram bot script that allows you to send messages 
 - fnmatch
 - PIL, Image
 - sqlite3
+- requests
+- schedule
 
 
 ### Installation
