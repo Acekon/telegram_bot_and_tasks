@@ -22,21 +22,19 @@ This repository contains a Telegram bot script that allows you to send messages 
 ```bash
 git clone <repository-url>
 cd <repository-folder>
-
 ```
-
-1.1 For ubuntu install font 
+2. For ubuntu install font (opcional):
 ```bash
 apt install ttf-mscorefonts-installer
 ```
 
-2. Install the required dependencies:
+3. Install the required dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Create a file named `conf.py` in the same directory as the bot script and set the required configuration variables:
+4. Create a file named `conf.py` in the same directory as the bot script and set the required configuration variables:
 
 ```python
 # conf.py
