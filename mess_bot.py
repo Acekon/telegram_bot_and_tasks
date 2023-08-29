@@ -5,7 +5,7 @@ import string
 import time
 
 import requests
-from PIL import Image
+from PIL import Image, ImageFont, ImageDraw
 from telebot import types
 from telebot.types import CallbackQuery, Message
 import sqlite3
@@ -117,8 +117,8 @@ def get_message_id(message: Message):
             files_name = []
             keyboard = types.InlineKeyboardMarkup(row_width=2)
             buttons = [
-                types.InlineKeyboardButton('💥 Remove message and img', callback_data=f'mess|remove:{message.text}'),
-                types.InlineKeyboardButton('💥 Remove IMG', callback_data=f'mess|remove|img:{message.text}'),
+                types.InlineKeyboardButton('💥 Remove message and img', callback_data=f'mess|remove-mess:{message.text}'),
+                types.InlineKeyboardButton('💥 Remove IMG', callback_data=f'mess|remove-img:{message.text}'),
                 types.InlineKeyboardButton('🟢 Replace', callback_data=f'mess|replace:{message.text}'),
                 types.InlineKeyboardButton('🟡 Cancel', callback_data=f'mess|cancel')]
             keyboard.add(*buttons)
@@ -140,7 +140,43 @@ def get_message_id(message: Message):
         bot.send_message(admin_id, f"Error: {err}")
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('mess|remove'))
+@bot.callback_query_handler(func=lambda call: call.data.startswith('mess|remove-img'))
+def command_mess_remove_img(message: CallbackQuery):
+    if not message.from_user.id == admin_id:
+        return bot.send_message(message.from_user.id, text=f'{message.from_user.first_name} you do not have permission')
+    matching_files = []
+    files_name = []
+    for file_name in os.listdir('img/'):
+        if fnmatch.fnmatch(file_name, f'{message.data.split(":")[1]}_*.png'):
+            matching_files.append(os.path.abspath('img/' + file_name))
+            files_name.append(file_name)
+    if matching_files:
+        create_image_collage(matching_files)
+        keyboard = types.InlineKeyboardMarkup(row_width=2)
+        buttons = []
+        for file_name in matching_files:
+            name = file_name.split('/')[-1]
+            buttons.append(types.InlineKeyboardButton(f'💥 Remove {name}', callback_data=f'mess|remove-file:{name}'))
+        keyboard.add(*buttons)
+        bot.send_photo(chat_id=admin_id, photo=open('collage.png', 'rb',),
+                       caption=f'File list:\n{files_name}', reply_markup=keyboard)
+        if os.path.isfile('collage.png'):
+            os.remove('collage.png')
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('mess|remove-file'))
+def command_mess_remove_file(message: CallbackQuery):
+    if not message.from_user.id == admin_id:
+        return bot.send_message(message.from_user.id, text=f'{message.from_user.first_name} you do not have permission')
+    if os.path.isfile(f'img/{message.data.split(":")[1]}'):
+        os.remove(f'img/{message.data.split(":")[1]}')
+        if not os.path.exists(f'img/{message.data.split(":")[1]}'):
+            bot.send_message(admin_id, f'file remove: {message.data.split(":")[1]}')
+    else:
+        bot.send_message(admin_id, f'file not found: {message.data.split(":")[1]}')
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('mess|remove-mess'))
 def command_mess_remove(message: CallbackQuery):
     if not message.from_user.id == admin_id:
         return bot.send_message(message.from_user.id, text=f'{message.from_user.first_name} you do not have permission')
@@ -180,8 +216,11 @@ def create_image_collage(image_paths, output_path='collage.png'):
     collage_size = (image_size[0] * len(image_paths), image_size[1])
     collage = Image.new('RGB', collage_size)
     for i, image_path in enumerate(image_paths):
+        img_name = image_path.split('/')[-1]
         image = Image.open(image_path)
         image = image.resize(image_size)
+        im = ImageDraw.Draw(image)
+        im.text((15, 170), f"{img_name}", fill=(255, 0, 0), font=ImageFont.truetype("arial.ttf", 22))
         collage.paste(image, (i * image_size[0], 0))
     collage.save(output_path)
 
@@ -225,6 +264,7 @@ def get_message_search(message: Message):
             bot.send_message(admin_id, f"Find {len(messages)} please specify your request ")
     except sqlite3.OperationalError as err:
         bot.send_message(admin_id, f"Error: {err}")
+
 
 if __name__ == '__main__':
     bot.infinity_polling(timeout=60, long_polling_timeout=30)
