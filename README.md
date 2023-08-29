@@ -24,7 +24,7 @@ git clone <repository-url>
 cd <repository-folder>
 
 ```
-For ubuntu install font 
+1.1 For ubuntu install font 
 ```bash
 apt install ttf-mscorefonts-installer
 ```
