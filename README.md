@@ -9,7 +9,7 @@ This repository contains a Telegram bot script that allows you to send messages 
 - Python 3.x
 - Telebot library
 - fnmatch
-- PIL, Image
+- PIL, Image, ImageFont, ImageDraw
 - sqlite3
 - requests
 - schedule
@@ -22,6 +22,11 @@ This repository contains a Telegram bot script that allows you to send messages 
 ```bash
 git clone <repository-url>
 cd <repository-folder>
+
+```
+For ubuntu install font 
+```bash
+apt install ttf-mscorefonts-installer
 ```
 
 2. Install the required dependencies:
