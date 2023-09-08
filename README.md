@@ -87,7 +87,8 @@ The bot uses the `schedule` library to schedule sending messages at the specifie
 To run the bot, simply execute the script:
 
 ```bash
-python bot.py
+python mess_bot.py
+python mess_task.py
 ```
 
 The bot will start polling for updates and send messages at the specified times.
