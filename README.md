@@ -1,4 +1,4 @@
-# Telegram Message Bot - v0.3.0
+# Telegram Message Bot - v0.3.1
 
 This repository contains a Telegram bot script that allows you to send messages and images to a chat at specified intervals using the Telegram Bot API. The bot is built using Python and utilizes the Telebot library.
 
@@ -73,6 +73,9 @@ The bot provides several commands to manage messages:
 
 - `/status`: Check the status of sent and unsent messages.
 - `/getmess`: Retrieve information about a specific message, including associated images (if any).
+- `/addmess`: Add new message in DB and return saved ID.
+- `/addimg`: Add new IMG for ID message.
+- `/search`: Search message search by keyword return list ID messages.
 - Callback queries: The bot provides inline keyboard buttons for message management, such as removing a message, removing associated images, and replacing the message.
 
 ### Schedule and Sending
