@@ -117,21 +117,25 @@ def get_message_id(message: Message):
             files_name = []
             keyboard = types.InlineKeyboardMarkup(row_width=2)
             buttons = [
-                types.InlineKeyboardButton('💥 Remove message and img', callback_data=f'mess|remove-mess:{message.text}'),
+                types.InlineKeyboardButton('💥 Remove IMG & Message', callback_data=f'mess|remove-mess:{message.text}'),
                 types.InlineKeyboardButton('💥 Remove IMG', callback_data=f'mess|remove-img:{message.text}'),
-                types.InlineKeyboardButton('🟢 Replace', callback_data=f'mess|replace:{message.text}'),
-                types.InlineKeyboardButton('🟡 Cancel', callback_data=f'mess|cancel')]
+                # types.InlineKeyboardButton('🟢 Replace', callback_data=f'mess|replace:{message.text}'),
+                # types.InlineKeyboardButton('🟡 Cancel', callback_data=f'mess|cancel')
+            ]
             keyboard.add(*buttons)
-            for file_name in os.listdir('img/'):
-                if fnmatch.fnmatch(file_name, f'{message.text}_*.png'):
-                    matching_files.append(os.path.abspath('img//' + file_name))
-                    files_name.append(file_name)
-            if matching_files:
-                create_image_collage(matching_files)
-                bot.send_photo(chat_id=admin_id, photo=open('collage.png', 'rb'),
-                               caption=f'{mess[1]}\n\nFile list:\n{files_name}', reply_markup=keyboard)
-                if os.path.isfile('collage.png'):
-                    os.remove('collage.png')
+            try:
+                for file_name in os.listdir('img/'):
+                    if fnmatch.fnmatch(file_name, f'{message.text}_*.png'):
+                        matching_files.append(os.path.abspath('img//' + file_name))
+                        files_name.append(file_name)
+                if matching_files:
+                    create_image_collage(matching_files)
+                    bot.send_photo(chat_id=admin_id, photo=open('collage.png', 'rb'),
+                                   caption=f'{mess[1]}\n\nFile list:\n{files_name}', reply_markup=keyboard)
+                    if os.path.isfile('collage.png'):
+                        os.remove('collage.png')
+            except FileNotFoundError:
+                bot.send_message(admin_id, 'Error please create "img" dir')
             else:
                 bot.send_message(admin_id, f"{mess[1]}!", reply_markup=keyboard)
         else:
@@ -267,4 +271,6 @@ def get_message_search(message: Message):
 
 
 if __name__ == '__main__':
+    print('start')
     bot.infinity_polling(timeout=60, long_polling_timeout=30)
+
