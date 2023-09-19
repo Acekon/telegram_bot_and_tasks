@@ -12,10 +12,18 @@ import sqlite3
 from conf import bot, admin_id, db_path, send_chat_id
 
 
+def auth(func):
+    async def wrapper(message):
+        if message.chat.id != admin_id:
+            return await bot.send_message(message.chat.id, text=f'{message.chat.first_name} you do not have permission')
+        return await func(message)
+
+    return wrapper
+
+
+@auth
 @bot.message_handler(commands=['addmess'])
 def command_add_mess(message: Message):
-    if not message.chat.id == admin_id:
-        return bot.send_message(message.chat.id, text=f'{message.chat.first_name} you do not have permission')
     bot.send_message(message.chat.id, "Enter text for save:")
     bot.register_next_step_handler(message, save_mess)
 
@@ -36,10 +44,9 @@ def save_mess(message: Message):
         bot.send_message(admin_id, f"Not Save! Error: {err}")
 
 
+@auth
 @bot.message_handler(commands=['addimg'])
 def command_add_img(message: Message):
-    if not message.chat.id == admin_id:
-        return bot.send_message(message.chat.id, text=f'{message.chat.first_name} you do not have permission')
     bot.send_message(admin_id, "Enter ID message this photo:")
     bot.register_next_step_handler(message, set_name_img)
 
@@ -58,7 +65,7 @@ def upload_img(message: Message, name_img):
     if response_img.status_code != 200:
         return bot.send_message(admin_id, f"File not upload in server Http code: {response_img.status_code}")
     try:
-        random_prefix_file = ''.join(random.choice(string.ascii_letters) for i in range(6))
+        random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(6))
         with open(f"img/{name_img}_{random_prefix_file}.png", 'wb') as f:
             f.write(response_img.content)
         return bot.send_message(admin_id, f"File {name_img}_{random_prefix_file}.png is uploads")
@@ -66,10 +73,9 @@ def upload_img(message: Message, name_img):
         return bot.send_message(admin_id, f"File not upload in server: {f}")
 
 
+@auth
 @bot.message_handler(commands=['status'])
 def command_check_status(message):
-    if not message.chat.id == admin_id:
-        return bot.send_message(message.chat.id, text=f'{message.chat.first_name} you do not have permission')
     sending_stats = check_last_sent_status()
     text_sending_stats = (f'All messages = {sending_stats[0]}\n'
                           f'Available Send = {sending_stats[2]}\n'
@@ -81,10 +87,9 @@ def command_check_status(message):
     bot.send_message(admin_id, f"{text_sending_stats}", reply_markup=keyboard)
 
 
+@auth
 @bot.callback_query_handler(func=lambda call: call.data.startswith('reset'))
 def command_mess_reset(message: CallbackQuery):
-    if not message.from_user.id == admin_id:
-        return bot.send_message(message.from_user.id, text=f'{message.from_user.first_name} you do not have permission')
     try:
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
@@ -96,6 +101,7 @@ def command_mess_reset(message: CallbackQuery):
         bot.send_message(admin_id, f"Not reset! Error: {err}")
 
 
+@auth
 @bot.message_handler(commands=['getmess'])
 def command_get_mess(message):
     if not message.chat.id == admin_id:
@@ -144,10 +150,9 @@ def get_message_id(message: Message):
         bot.send_message(admin_id, f"Error: {err}")
 
 
+@auth
 @bot.callback_query_handler(func=lambda call: call.data.startswith('mess|remove-img'))
 def command_mess_remove_img(message: CallbackQuery):
-    if not message.from_user.id == admin_id:
-        return bot.send_message(message.from_user.id, text=f'{message.from_user.first_name} you do not have permission')
     matching_files = []
     files_name = []
     for file_name in os.listdir('img/'):
@@ -162,16 +167,15 @@ def command_mess_remove_img(message: CallbackQuery):
             name = file_name.split('/')[-1]
             buttons.append(types.InlineKeyboardButton(f'💥 Remove {name}', callback_data=f'mess|remove-file:{name}'))
         keyboard.add(*buttons)
-        bot.send_photo(chat_id=admin_id, photo=open('collage.png', 'rb',),
+        bot.send_photo(chat_id=admin_id, photo=open('collage.png', 'rb', ),
                        caption=f'File list:\n{files_name}', reply_markup=keyboard)
         if os.path.isfile('collage.png'):
             os.remove('collage.png')
 
 
+@auth
 @bot.callback_query_handler(func=lambda call: call.data.startswith('mess|remove-file'))
 def command_mess_remove_file(message: CallbackQuery):
-    if not message.from_user.id == admin_id:
-        return bot.send_message(message.from_user.id, text=f'{message.from_user.first_name} you do not have permission')
     if os.path.isfile(f'img/{message.data.split(":")[1]}'):
         os.remove(f'img/{message.data.split(":")[1]}')
         if not os.path.exists(f'img/{message.data.split(":")[1]}'):
@@ -180,10 +184,9 @@ def command_mess_remove_file(message: CallbackQuery):
         bot.send_message(admin_id, f'file not found: {message.data.split(":")[1]}')
 
 
+@auth
 @bot.callback_query_handler(func=lambda call: call.data.startswith('mess|remove-mess'))
 def command_mess_remove(message: CallbackQuery):
-    if not message.from_user.id == admin_id:
-        return bot.send_message(message.from_user.id, text=f'{message.from_user.first_name} you do not have permission')
     if message.message.content_type == 'photo':
         remove_mess(message.data.split(':')[1])
     elif message.message.content_type == 'text':
@@ -242,10 +245,9 @@ def check_last_sent_status():
     return lats_sent
 
 
+@auth
 @bot.message_handler(commands=['search'])
 def command_get_search(message):
-    if not message.chat.id == admin_id:
-        return bot.send_message(message.chat.id, text=f'{message.chat.first_name} you do not have permission')
     bot.send_message(admin_id, "Enter string for search")
     bot.register_next_step_handler(message, get_message_search)
 
@@ -273,4 +275,3 @@ def get_message_search(message: Message):
 if __name__ == '__main__':
     print('start')
     bot.infinity_polling(timeout=60, long_polling_timeout=30)
-
