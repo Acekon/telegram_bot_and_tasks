@@ -134,6 +134,7 @@ def get_message_id(message: Message):
                                    caption=f'{mess[1]}\n\nFile list:\n{files_name}', reply_markup=keyboard)
                     if os.path.isfile('collage.png'):
                         os.remove('collage.png')
+                    return
             except FileNotFoundError:
                 bot.send_message(admin_id, 'Error please create "img" dir')
             else:
