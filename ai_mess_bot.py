@@ -5,13 +5,14 @@ import sys
 from aiogram import Bot, Dispatcher
 
 from conf import bot_token, session
-from handlers import control_handlers
+from handlers import control_handler, message_handler
 
 dp = Dispatcher()
 
 
 async def main() -> None:
-    dp.include_router(control_handlers.router)
+    dp.include_router(control_handler.router)
+    dp.include_router(message_handler.router)
     bot = Bot(token=bot_token, session=session, parse_mode='HTML')
     await dp.start_polling(bot)
 

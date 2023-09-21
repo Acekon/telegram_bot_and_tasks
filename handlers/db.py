@@ -26,3 +26,33 @@ def mess_reset():
         return f'History sending messages is reset, new iteration started.'
     except sqlite3.OperationalError as err:
         return f"Not reset! Error: {err}"
+
+
+def search_mess(mess_text):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f'SELECT ids, text_message FROM messages WHERE text_message like "%{mess_text}%"')
+        messages = c.fetchall()
+        conn.commit()
+        conn.close()
+        if not messages:
+            return ["Not found"]
+        return messages
+    except sqlite3.OperationalError as err:
+        return [f"Error: {err}"]
+
+
+def get_message_id(mess_id):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f'SELECT ids, text_message FROM messages WHERE ids="{mess_id}"')
+        mess = c.fetchone()
+        conn.commit()
+        conn.close()
+        if not mess:
+            return None
+        return mess
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
