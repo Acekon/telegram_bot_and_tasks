@@ -3,6 +3,7 @@ import os
 import random
 import string
 
+import requests
 from PIL import Image, ImageDraw, ImageFont
 
 full_path_img_dir = os.path.join(os.getcwd(), 'img\\')
@@ -29,7 +30,7 @@ def remove_collage(collage_path):
 
 
 def create_image_collage(image_paths):
-    random_prefix_file = ''.join(random.choice(string.ascii_letters) for i in range(6))
+    random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(6))
     output_path = f'{full_path_img_dir}collage_{random_prefix_file}.png'
     image_size = (200, 200)
     collage_size = (image_size[0] * len(image_paths), image_size[1])
@@ -43,3 +44,17 @@ def create_image_collage(image_paths):
         collage.paste(image, (i * image_size[0], 0))
     collage.save(output_path)
     return output_path
+
+
+def download_img(file_id, bot_token, mess_id):
+    file_info = requests.get(f'https://api.telegram.org/bot{bot_token}/getFile?file_id={file_id}')
+    file_path = file_info.json()['result']['file_path']
+    response_img = requests.get(f'https://api.telegram.org/file/bot{bot_token}/{file_path}')
+    random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(6))
+    with open(f"img/{mess_id}_{random_prefix_file}.png", 'wb') as f:
+        f.write(response_img.content)
+    return f"File {mess_id}_{random_prefix_file}.png is uploads"
+
+
+if __name__ == '__main__':
+    pass

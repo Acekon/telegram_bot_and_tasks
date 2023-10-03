@@ -56,3 +56,18 @@ def get_message_id(mess_id):
         return mess
     except sqlite3.OperationalError as err:
         return f"Error: {err}"
+
+
+def add_message(text_message):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f"INSERT INTO messages (text_message) VALUES ('{text_message}')")
+        conn.commit()
+        c.execute('SELECT ids FROM messages ORDER BY ids DESC LIMIT 1')
+        lats_sent = c.fetchone()
+        conn.commit()
+        conn.close()
+        return f"Saved! last ID= {lats_sent[0]}"
+    except sqlite3.OperationalError as err:
+        return f"Not Save! Error: {err}"
