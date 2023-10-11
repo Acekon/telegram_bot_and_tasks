@@ -71,3 +71,18 @@ def add_message(text_message):
         return f"Saved! last ID= {lats_sent[0]}"
     except sqlite3.OperationalError as err:
         return f"Not Save! Error: {err}"
+
+
+def remove_message(id_mess):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        count = c.execute(f'DELETE FROM messages WHERE ids = "{id_mess}"').rowcount
+        conn.commit()
+        conn.close()
+        if count != 0:
+            return True
+        else:
+            return False
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
