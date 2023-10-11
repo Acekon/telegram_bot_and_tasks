@@ -50,11 +50,14 @@ def create_image_collage(image_paths):
 
 
 def create_vertical_collage(image_paths):
+    width = 300
     random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(6))
     output_path = f'{full_path_img_dir}collage_{random_prefix_file}.png'
     image_size = (200, 200)
     collage_height = image_size[1] * len(image_paths)
-    collage_width = image_size[0] + 300
+    if len(image_paths) >= 5:
+        width = len(image_paths) * 100
+    collage_width = image_size[0] + width
     collage = Image.new('RGB', (collage_width, collage_height), (255, 255, 255))
     images_name = []
     for i, image_path in enumerate(image_paths):
