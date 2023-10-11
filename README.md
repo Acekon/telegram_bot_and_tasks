@@ -1,4 +1,4 @@
-# Telegram Message Bot - v0.3.1
+# Telegram Message Bot - v0.3.3
 
 This repository contains a Telegram bot script that allows you to send messages and images to a chat at specified intervals using the Telegram Bot API. The bot is built using Python and utilizes the Telebot library.
 
@@ -8,6 +8,7 @@ This repository contains a Telegram bot script that allows you to send messages 
 
 - Python 3.x
 - Telebot library
+- Aiogram 3.x
 - fnmatch
 - PIL, Image, ImageFont, ImageDraw
 - sqlite3
@@ -63,19 +64,20 @@ Create dir img
 
 The bot can send both text messages and images. It retrieves messages and image paths from a SQLite database and sends them to the specified chat ID at the times specified in `start_times`.
 
-To add a new message to the bot, you can use the command `/addmess` and then follow the prompts to save the message to the database.
+To add a new message to the bot, you can use the command `/create` and then follow the prompts to save the message to the database.
 
-To add an image to a specific message, you can use the command `/addimg` and follow the prompts to upload the image and associate it with the desired message ID.
+To add an image to a specific message, you can use the command `/upload` and follow the prompts to upload the image and associate it with the desired message ID.
 
 ### Managing Messages
 
 The bot provides several commands to manage messages:
 
 - `/status`: Check the status of sent and unsent messages.
-- `/getmess`: Retrieve information about a specific message, including associated images (if any).
-- `/addmess`: Add new message in DB and return saved ID.
-- `/addimg`: Add new IMG for ID message.
+- `/get`: Retrieve information about a specific message, including associated images (if any).
+- `/create`: Add new message in DB and return saved ID.
+- `/upload`: Add new IMG for ID message.
 - `/search`: Search message search by keyword return list ID messages.
+- `/status`: Return status sending.
 - Callback queries: The bot provides inline keyboard buttons for message management, such as removing a message, removing associated images, and replacing the message.
 
 ### Schedule and Sending
@@ -87,7 +89,7 @@ The bot uses the `schedule` library to schedule sending messages at the specifie
 To run the bot, simply execute the script:
 
 ```bash
-python mess_bot.py
+python ai_mess_bot.py
 python mess_task.py
 ```
 
