@@ -1,15 +1,14 @@
-from telebot import types
+import telebot
 import schedule
 import random
 import time
 import datetime
 import sqlite3
 import os
-from conf import start_times, db_path, send_chat_id, bot, admin_id
+from conf import start_times, db_path, send_chat_id, admin_id, bot_token
 
 
-def send_message(send_chat_id):
-    print(f"Debug {(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))} sending")
+def send_message():
     conn = sqlite3.connect(db_path())
     c = conn.cursor()
     c.execute('SELECT * FROM messages WHERE last_send is NULL')
@@ -78,4 +77,5 @@ def run():
 
 
 if __name__ == '__main__':
+    bot = telebot.TeleBot(bot_token)
     run()
