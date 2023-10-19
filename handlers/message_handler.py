@@ -65,7 +65,7 @@ async def process_mess_get(message: Message, state: FSMContext):
         [types.InlineKeyboardButton(text="Remove Message & all Img", callback_data=f'remove_mess_img:{message.text}'),
          types.InlineKeyboardButton(text="Remove all Img", callback_data=f'remove_all_img:{message.text}')],
         [types.InlineKeyboardButton(text="Edit image list", callback_data=f'edit_image_list:{message.text}')],
-        [types.InlineKeyboardButton(text="Cancel", callback_data=f'cancel')],
+        [types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     if path_collage:
@@ -142,3 +142,10 @@ async def process_mess_add_img(message: Message, state: FSMContext):
         return await message.answer(result)
     else:
         return await message.answer('You not enter ID message')
+
+
+@router.callback_query(lambda c: c.data == 'clear_keyboard')
+async def process_control_admins(callback_query: CallbackQuery):
+    kb = []
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    await callback_query.message.edit_reply_markup(reply_markup=keyboard)

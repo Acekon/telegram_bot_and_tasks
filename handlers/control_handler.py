@@ -130,9 +130,16 @@ async def process_control_admins(callback_query: CallbackQuery):
         kb.append([types.InlineKeyboardButton(text=f'❌ {admin[0]} ({admin[1]})',
                                               callback_data=f'remove_admin:{str(admin[0])}')])
     kb.append([types.InlineKeyboardButton(text="New admin", callback_data='new_admin'),
-               types.InlineKeyboardButton(text="Back", callback_data='back_to_control')])
+               types.InlineKeyboardButton(text="Cancel", callback_data='clear_keyboard')])
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     await callback_query.message.edit_text(reply_markup=keyboard, text="List of admins:")
+
+
+@router.callback_query(lambda c: c.data == 'clear_keyboard')
+async def process_control_admins(callback_query: CallbackQuery):
+    kb = []
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    await callback_query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('remove_admin:'))
