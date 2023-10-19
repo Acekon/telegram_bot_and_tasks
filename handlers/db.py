@@ -86,3 +86,46 @@ def remove_message(id_mess):
             return False
     except sqlite3.OperationalError as err:
         return f"Error: {err}"
+
+
+def get_admins_list():
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        admins = c.execute(f'SELECT value, description FROM settings WHERE name = "admin_id"')
+        conn.commit()
+        admins = admins.fetchall()
+        conn.close()
+        res_admins = []
+        for adm in admins:
+            res_admins.append([int(adm[0]), adm[1]])
+        return res_admins
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
+
+
+def add_admin_list(admin_id, description):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f"INSERT INTO settings (name,value,description) VALUES ('admin_id','{admin_id}','{description}')")
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
+
+
+def remove_admin_list(admin_id):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        admin = c.execute(f'DELETE FROM settings WHERE value = "{admin_id}"').rowcount
+        conn.commit()
+        conn.close()
+        if admin != 0:
+            return True
+        else:
+            return False
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
