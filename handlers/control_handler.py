@@ -17,6 +17,7 @@ class FormGetNewAdmins(StatesGroup):
 
 
 @router.message(Command(commands=['status']))
+@auth_admin
 async def command_check_status(message):
     sending_stats = check_last_sent_status()
     text_sending_stats = (f'All messages = {sending_stats[0]}\n'
@@ -30,16 +31,19 @@ async def command_check_status(message):
 
 
 @router.callback_query(F.data == 'reset')
+@auth_admin
 async def command_mess_reset(message: CallbackQuery):
     return await message.answer(f"{mess_reset()}")
 
 
 @router.message(CommandStart())
+@auth_admin
 async def command_start_handler(message: Message) -> Message:
     return await message.answer(f"Hello, {hbold(message.from_user.full_name)}")
 
 
 @router.message(Command(commands=['help']))
+@auth_admin
 async def command_help(message: Message) -> Message:
     help_text = """To use this bot, you need to understand the available commands and how to interact with it.
     Here's a brief guide on how to use this bot:
@@ -93,6 +97,7 @@ It will display information about the number of messages,
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('get_bot_father'))
+@auth_admin
 async def command_get_bot_father(callback_query: CallbackQuery):
     text_bot_father = """
 status - Status
@@ -116,6 +121,7 @@ async def command_test(message: Message) -> Message:
 
 
 @router.message(Command(commands=['control']))
+@auth_admin
 async def command_control(message: Message):
     kb = [[types.InlineKeyboardButton(text="Control admins", callback_data=f'control_admins')]]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
@@ -123,6 +129,7 @@ async def command_control(message: Message):
 
 
 @router.callback_query(lambda c: c.data == 'control_admins')
+@auth_admin
 async def process_control_admins(callback_query: CallbackQuery):
     admins = get_admins_list()
     kb = []
@@ -136,6 +143,7 @@ async def process_control_admins(callback_query: CallbackQuery):
 
 
 @router.callback_query(lambda c: c.data == 'clear_keyboard')
+@auth_admin
 async def process_control_admins(callback_query: CallbackQuery):
     kb = []
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
@@ -143,6 +151,7 @@ async def process_control_admins(callback_query: CallbackQuery):
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('remove_admin:'))
+@auth_admin
 async def process_remove_admins(callback_query: CallbackQuery):
     admins = get_admins_list()
     if not len(admins) > 1:
@@ -154,6 +163,7 @@ async def process_remove_admins(callback_query: CallbackQuery):
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('new_admin'))
+@auth_admin
 async def process_new_admins(callback_query: CallbackQuery, state: FSMContext):
     await state.set_state(FormGetNewAdmins.name_admin)
     await callback_query.message.answer(f"Enter id and descriptions new admin\n"
@@ -161,6 +171,7 @@ async def process_new_admins(callback_query: CallbackQuery, state: FSMContext):
 
 
 @router.message(FormGetNewAdmins.name_admin)
+@auth_admin
 async def process_mess_search(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     try:
@@ -171,4 +182,5 @@ async def process_mess_search(message: Message, state: FSMContext):
         else:
             await message.answer(f'Err: {admin_id}, {description}\n {result}')
     except ValueError:
-        return await message.answer('Err: required\n<b>12345678,NameAdmin</b>')
+        await message.answer('Err: required\n<b>12345678,NameAdmin</b>')
+    return await state.clear()
