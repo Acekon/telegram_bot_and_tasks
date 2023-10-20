@@ -1,7 +1,7 @@
 import functools
 import logging
-from aiogram.types import Message, CallbackQuery
 
+import aiogram.types
 from handlers.db import get_admins_list
 
 logger = logging.getLogger('bot_logger')
@@ -23,25 +23,21 @@ logger.addHandler(console_handler)
 
 def auth_admin(func):
     @functools.wraps(func)
-    async def wrapper(message=None, callback_query=None):
+    async def wrapper(message=None, *args, **kwargs):
         admins_id = get_admins_list()
-        if message:
-            user_id = message.from_user.id
+        user_id = message.from_user.id
+        user_first_name = message.from_user.first_name
+        user_last_name = message.from_user.last_name
+        if isinstance(message, aiogram.types.callback_query.CallbackQuery):
+            user_command = message.data
+        elif isinstance(message, aiogram.types.message.Message):
             user_command = message.text
-            user_first_name = message.from_user.first_name
-            user_last_name = message.from_user.last_name
-        elif callback_query:
-            user_id = callback_query.from_user.id
-            user_command = callback_query.message.text
-            user_first_name = callback_query.from_user.first_name
-            user_last_name = callback_query.from_user.last_name
         else:
-            return logger.debug(f'message:{message};callback_query:{callback_query}')
+            user_command = 'Not support loging command'
         logger.debug(f'user:{user_id};command:{user_command}')
-        if user_id not in admins_id:
+        if user_id not in [admin[0] for admin in admins_id]:
             logger.error(f'NOT PERMISSION: '
                          f'{user_id};{user_first_name};{user_last_name};{user_command}')
             return await message.answer(text=f'{user_first_name} you do not have permission')
-        return await func(message)
+        return await func(message, *args, **kwargs)
     return wrapper
-
