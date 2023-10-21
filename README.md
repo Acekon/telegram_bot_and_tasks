@@ -19,47 +19,44 @@ intervals using the Telegram Bot API. The bot is built using Python and utilizes
 
 1. Clone this repository to your local machine:
 
-```bash
-git clone <repository-url>
-cd <repository-folder>
-```
+    ```bash
+    git clone <repository-url>
+    cd <repository-folder>
+    ```
 
 2. For ubuntu install font (opcional):
 
-```bash
-apt install ttf-mscorefonts-installer
-```
+    ```bash
+    apt install ttf-mscorefonts-installer
+    ```
 
 3. Install the required dependencies:
 
-```bash
-pip install -r requirements.txt
-```
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 4. Create a file named `conf.py` in the same directory as the bot script and set the required configuration variables:
 
-```python
-# conf.py
-start_times = ['09:00', '12:00', '15:00']  # Add the times you want the bot to send messages
-db_path = 'my_database.db'  # Set the path to your SQLite database
-send_chat_id = '123456789'  # Set the chat ID where you want the bot to send messages
-bot_token = 'YOUR_TELEGRAM_BOT_TOKEN'  # Replace this with your Telegram bot token
-admin_id = 'YOUR_ADMIN_CHAT_ID'  # Replace this with your admin chat ID
-```
+    ```python
+    # conf.py
+    start_times = ['09:00', '12:00', '15:00']  # Add the times you want the bot to send messages
+    db_path = 'my_database.db'  # Set the path to your SQLite database
+    bot_token = 'YOUR_TELEGRAM_BOT_TOKEN'  # Replace this with your Telegram bot token or create .env file
+    ```
 
-Replace `YOUR_TELEGRAM_BOT_TOKEN` and `YOUR_ADMIN_CHAT_ID` with your Telegram bot token and admin chat ID respectively.
-Create table on my_database.db
+Replace `YOUR_TELEGRAM_BOT_TOKEN` with your Telegram bot token.
 
-```MSSQL
-CREATE TABLE "messages" (
-	"ids"	INTEGER NOT NULL UNIQUE,
-	"text_message"	TEXT,
-	"last_send"	TEXT,
-	PRIMARY KEY("ids" AUTOINCREMENT)
-);
-```
+### First run
 
-Create dir img
+  ```bash
+  #Create dir img, logs and Create empty DB
+  python ai_mess_bot.py --generate
+  
+  #Add admin chat ID respectively
+  python ai_mess_bot.py --createadmin 123456789,NameAdmin
+  
+  ```
 
 ## Functionality
 
@@ -84,6 +81,7 @@ The bot provides several commands to manage messages:
 - `/upload`: Add new IMG for ID message.
 - `/search`: Search message search by keyword return list ID messages.
 - `/status`: Return status sending.
+- `/control`: Change admin list
 - Callback queries: The bot provides inline keyboard buttons for message management, such as removing a message,
   removing associated images, and replacing the message.
 
@@ -97,7 +95,7 @@ function sets up the schedule, and the bot continuously checks for pending tasks
 To run the bot, simply execute the script:
 
 ```bash
-python ai_mess_bot.py
+python ai_mess_bot.py --run
 python mess_task.py
 ```
 

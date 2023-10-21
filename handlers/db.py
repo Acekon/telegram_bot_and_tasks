@@ -120,12 +120,33 @@ def remove_admin_list(admin_id):
     try:
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        admin = c.execute(f'DELETE FROM settings WHERE value = "{admin_id}"').rowcount
+        count = c.execute(f'DELETE FROM settings WHERE value = "{admin_id}"').rowcount
         conn.commit()
         conn.close()
-        if admin != 0:
+        if count != 0:
             return True
         else:
             return False
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
+
+
+def create_all_table():
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f'CREATE TABLE "messages" '
+                  f'("ids"INTEGER,'
+                  f'"text_message"TEXT NOT NULL,'
+                  f'"last_send" TEXT DEFAULT NULL,'
+                  f'PRIMARY KEY("ids" AUTOINCREMENT))')
+        c.execute(f'CREATE TABLE "settings" ('
+                  f'"id" INTEGER NOT NULL UNIQUE,'
+                  f'"name" TEXT,'
+                  f'"value"	TEXT,'
+                  f'"description" TEXT,'
+                  f'PRIMARY KEY("id" AUTOINCREMENT))')
+        conn.commit()
+        conn.close()
     except sqlite3.OperationalError as err:
         return f"Error: {err}"

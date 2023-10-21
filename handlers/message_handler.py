@@ -1,6 +1,6 @@
 import time
 
-from aiogram import Router, types, F
+from aiogram import Router, types
 
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
