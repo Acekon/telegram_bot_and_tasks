@@ -24,7 +24,7 @@ intervals using the Telegram Bot API. The bot is built using Python and utilizes
     cd <repository-folder>
     ```
 
-2. For ubuntu install font (opcional):
+2. For ubuntu install font (optional):
 
     ```bash
     apt install ttf-mscorefonts-installer
