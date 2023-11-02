@@ -81,7 +81,7 @@ The bot provides several commands to manage messages:
 - `/upload`: Add new IMG for ID message.
 - `/search`: Search message search by keyword return list ID messages.
 - `/status`: Return status sending.
-- `/control`: Change admin list
+- `/control`: Change admin list, add & remove Send to chanel ID.
 - Callback queries: The bot provides inline keyboard buttons for message management, such as removing a message,
   removing associated images, and replacing the message.
 

@@ -2,7 +2,6 @@ import asyncio
 import logging
 import sys
 import time
-from threading import Thread
 
 import aiohttp
 from aiogram import Bot
