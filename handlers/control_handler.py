@@ -6,7 +6,8 @@ from aiogram.utils.markdown import hbold
 
 from aiogram.filters.command import Command, CommandStart
 
-from handlers.db import check_last_sent_status, mess_reset, get_admins_list, remove_admin_list, add_admin_list
+from handlers.db import check_last_sent_status, mess_reset, get_admins_list, remove_admin_list, add_admin_list, \
+    get_sendto, add_sendto, remove_sendto
 from handlers.service import auth_admin
 
 router = Router()
@@ -14,6 +15,10 @@ router = Router()
 
 class FormGetNewAdmins(StatesGroup):
     name_admin = State()
+
+
+class SendToAdd(StatesGroup):
+    name_sendto_add = State()
 
 
 @router.message(Command(commands=['status']))
@@ -123,7 +128,11 @@ async def command_test(message: Message) -> Message:
 @router.message(Command(commands=['control']))
 @auth_admin
 async def command_control(message: Message):
-    kb = [[types.InlineKeyboardButton(text="Control admins", callback_data=f'control_admins')]]
+    kb = [
+        [types.InlineKeyboardButton(text="Control admins", callback_data=f'control_admins')],
+        [types.InlineKeyboardButton(text="Reset sending message", callback_data=f'reset')],
+        [types.InlineKeyboardButton(text="Edit which chat to send to", callback_data=f'sendto_main')],
+    ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     return await message.answer(f"Control bots settings", reply_markup=keyboard)
 
@@ -184,3 +193,59 @@ async def process_mess_search(message: Message, state: FSMContext):
     except ValueError:
         await message.answer('Err: required\n<b>12345678,NameAdmin</b>')
     return await state.clear()
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('sendto_main'))
+@auth_admin
+async def command_sendto(callback_query: CallbackQuery):
+    sendto = get_sendto()
+    kb = []
+    if sendto:
+        kb.append([types.InlineKeyboardButton(text="Remove send to", callback_data=f'sendto_remove')])
+    else:
+        kb.append([types.InlineKeyboardButton(text="Add send to", callback_data=f'sendto_add')])
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    text_mess = (f"This need ID chanel from setting which chat to send to\n"
+                 f"Send to chanel ID: {sendto}\n")
+    return await callback_query.message.answer(text_mess, reply_markup=keyboard)
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('sendto_add'))
+@auth_admin
+async def command_sendto_add(callback_query: CallbackQuery, state: FSMContext):
+    await state.set_state(SendToAdd.name_sendto_add)
+    sendto = get_sendto()
+    if sendto:
+        kb = []
+        keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+        await callback_query.message.edit_reply_markup(reply_markup=keyboard)
+        return await callback_query.message.answer(f'Chanel id already added, {sendto} there can only be one')
+    await callback_query.message.answer(f'Please enter Chat ID (example: -123456789987456321,ChanelName)')
+
+
+@router.message(SendToAdd.name_sendto_add)
+@auth_admin
+async def process_sendto_add(message: Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    try:
+        chanel_id, description = message.text.split(',')
+        result = add_sendto(chanel_id, description)
+        if result:
+            await message.answer(f'Add: {chanel_id}, {description}')
+        else:
+            await message.answer(f'Err: {chanel_id}, {description}\n {result}')
+    except ValueError:
+        await message.answer('Err: required\n<b>-123456789987456321,ChanelName</b>')
+    return await state.clear()
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('sendto_remove'))
+@auth_admin
+async def process_remove_sendto(callback_query: CallbackQuery):
+    if remove_sendto():
+        kb = []
+        keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+        await callback_query.message.edit_reply_markup(reply_markup=keyboard)
+        return await callback_query.answer(f"Removed sendto Chanel ID")
+    else:
+        return await callback_query.answer(f"Err remove")
