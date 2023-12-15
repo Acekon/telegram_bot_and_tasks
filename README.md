@@ -87,7 +87,7 @@ The bot provides several commands to manage messages:
 
 ### Schedule and Sending
 
-The bot uses the `schedule` library to schedule sending messages at the specified times in `start_times`. The `run()`
+The bot uses the `schedule` library to schedule sending messages at the specified times in `start_times`. The `main_run()`
 function sets up the schedule, and the bot continuously checks for pending tasks using `schedule.run_pending()`.
 
 ## Running the Bot
@@ -96,7 +96,7 @@ To run the bot, simply execute the script:
 
 ```bash
 python ai_mess_bot.py --run
-python mess_task.py
+python ai_mess_task.py
 ```
 
 The bot will start polling for updates and send messages at the specified times.
