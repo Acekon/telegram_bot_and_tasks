@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-session = AiohttpSession(proxy="http://proxy2:3128/")
+session = None
 
 start_times = ['10:21', '10:22', '10:23']
 bot_token = f'{os.environ.get("bot_token")}'
