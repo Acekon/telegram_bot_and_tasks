@@ -1,10 +1,13 @@
 import os
+from aiogram.client.session.aiohttp import AiohttpSession
+from dotenv import load_dotenv
 
-session = None
-start_times = ['08:00', '12:00']
-bot_token = f'{os.environ.get("tg_token")}'
-admin_id = f'{os.environ.get("tg_admin_id")}'
-send_chat_id = f'{os.environ.get("tg_id_channel")}'
+load_dotenv()
+
+session = AiohttpSession(proxy="http://proxy2:3128/")
+
+start_times = ['10:21', '10:22', '10:23']
+bot_token = f'{os.environ.get("bot_token")}'
 
 
 def db_path():

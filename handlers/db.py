@@ -86,3 +86,107 @@ def remove_message(id_mess):
             return False
     except sqlite3.OperationalError as err:
         return f"Error: {err}"
+
+
+def get_admins_list():
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        admins = c.execute(f'SELECT value, description FROM settings WHERE name = "admin_id"')
+        conn.commit()
+        admins = admins.fetchall()
+        conn.close()
+        res_admins = []
+        for adm in admins:
+            res_admins.append([int(adm[0]), adm[1]])
+        return res_admins
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
+
+
+def add_admin_list(admin_id, description):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f"INSERT INTO settings (name,value,description) VALUES ('admin_id','{admin_id}','{description}')")
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
+
+
+def remove_admin_list(admin_id):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        count = c.execute(f'DELETE FROM settings WHERE value = "{admin_id}"').rowcount
+        conn.commit()
+        conn.close()
+        if count != 0:
+            return True
+        else:
+            return False
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
+
+
+def create_all_table():
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f'CREATE TABLE "messages" '
+                  f'("ids"INTEGER,'
+                  f'"text_message"TEXT NOT NULL,'
+                  f'"last_send" TEXT DEFAULT NULL,'
+                  f'PRIMARY KEY("ids" AUTOINCREMENT))')
+        c.execute(f'CREATE TABLE "settings" ('
+                  f'"id" INTEGER NOT NULL UNIQUE,'
+                  f'"name" TEXT,'
+                  f'"value"	TEXT,'
+                  f'"description" TEXT,'
+                  f'PRIMARY KEY("id" AUTOINCREMENT))')
+        conn.commit()
+        conn.close()
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
+
+
+def get_sendto():
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        send_to = c.execute(f'SELECT value, description FROM settings WHERE name = "send_to"')
+        conn.commit()
+        send_to = send_to.fetchone()
+        conn.close()
+        return send_to
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
+
+
+def add_sendto(chanel_id, description):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f"INSERT INTO settings (name,value,description) VALUES ('send_to','{chanel_id}','{description}')")
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
+
+
+def remove_sendto():
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        count = c.execute(f'DELETE FROM settings WHERE name = "send_to";').rowcount
+        conn.commit()
+        conn.close()
+        if count != 0:
+            return True
+        else:
+            return False
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"

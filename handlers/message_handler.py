@@ -1,6 +1,6 @@
 import time
 
-from aiogram import Router, types, F
+from aiogram import Router, types
 
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
@@ -10,6 +10,7 @@ from aiogram.filters.command import Command
 from handlers.db import search_mess, get_message_id, add_message, remove_message
 from handlers.img import get_collage, download_img, remove_img, remove_all_img
 from conf import bot_token
+from handlers.service import auth_admin
 
 router = Router()
 
@@ -31,14 +32,17 @@ class FormGetIdImg(StatesGroup):
 
 
 @router.message(Command(commands=['search']))
+@auth_admin
 async def command_get_search(message: Message, state: FSMContext):
     await state.set_state(FormSearchText.mess_search_text)
     await message.answer(f"Enter string for search")
 
 
 @router.message(FormSearchText.mess_search_text)
+@auth_admin
 async def process_mess_search(message: Message, state: FSMContext) -> None:
     await state.update_data(name=message.text)
+
     messages = search_mess(message.text)
     if len(messages) <= 10:
         for mess in messages:
@@ -46,26 +50,29 @@ async def process_mess_search(message: Message, state: FSMContext) -> None:
             time.sleep(0.2)
     else:
         await message.answer(f"Find {len(messages)}, please specify your request")
+    return await state.clear()
 
 
 @router.message(Command(commands=['get']))
+@auth_admin
 async def command_get_id(message: Message, state: FSMContext):
     await state.set_state(FormGetId.mess_id)
     await message.answer(f"Enter ID message")
 
 
 @router.message(FormGetId.mess_id)
+@auth_admin
 async def process_mess_get(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     message_text = get_message_id(message.text)
     if not message_text:
-        return await message.answer(f"Not found")
+        return await message.answer(f"Not found ID message")
     path_collage = get_collage(message.text)
     kb = [
         [types.InlineKeyboardButton(text="Remove Message & all Img", callback_data=f'remove_mess_img:{message.text}'),
          types.InlineKeyboardButton(text="Remove all Img", callback_data=f'remove_all_img:{message.text}')],
         [types.InlineKeyboardButton(text="Edit image list", callback_data=f'edit_image_list:{message.text}')],
-        [types.InlineKeyboardButton(text="Cancel", callback_data=f'cancel')],
+        [types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     if path_collage:
@@ -73,9 +80,11 @@ async def process_mess_get(message: Message, state: FSMContext):
         remove_img(path_collage)
     else:
         await message.answer(message_text[1], reply_markup=keyboard)
+    return await state.clear()
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('remove_all_img:'))
+@auth_admin
 async def command_remove_img(callback_query: CallbackQuery):
     image_id = callback_query.data.split(':')[-1]
     files_name = remove_all_img(image_id)
@@ -83,6 +92,7 @@ async def command_remove_img(callback_query: CallbackQuery):
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('remove_mess_img:'))
+@auth_admin
 async def command_remove_message_img(callback_query: CallbackQuery):
     id_message = callback_query.data.split(':')[-1]
     files_name = remove_all_img(id_message)
@@ -95,6 +105,7 @@ async def command_remove_message_img(callback_query: CallbackQuery):
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('edit_image_list:'))
+@auth_admin
 async def command_edit_image_list(callback_query: CallbackQuery):
     id_message = callback_query.data.split(':')[-1]
     path_collage, images_name = get_collage(id_message, type_collage='vertical')
@@ -107,6 +118,7 @@ async def command_edit_image_list(callback_query: CallbackQuery):
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('remove_img:'))
+@auth_admin
 async def command_remove_img(callback_query: CallbackQuery):
     img_name = callback_query.data.split(':')[-1]
     remove_img(img_name=img_name, img_path=None)
@@ -115,30 +127,44 @@ async def command_remove_img(callback_query: CallbackQuery):
 
 
 @router.message(Command(commands=['create']))
+@auth_admin
 async def command_add_message(message: Message, state: FSMContext):
     await state.set_state(FormAddMess.text_message)
     await message.answer(f"Enter new message from save")
 
 
 @router.message(FormAddMess.text_message)
+@auth_admin
 async def process_mess_add(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     message_text = add_message(message.text)
-    return await message.answer(message_text)
+    await message.answer(message_text)
+    return await state.clear()
 
 
 @router.message(Command(commands=['upload']))
-async def command_add_message(message: Message, state: FSMContext):
+@auth_admin
+async def command_upload_image(message: Message, state: FSMContext):
     await state.set_state(FormGetIdImg.mess_id)
     await message.answer(f"Upload file and Enter ID message:")
 
 
 @router.message(FormGetIdImg.mess_id)
+@auth_admin
 async def process_mess_add_img(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     if message.caption and message.caption.isdigit():
         file_id = message.photo[-1].file_id
         result = download_img(bot_token=bot_token, file_id=file_id, mess_id=message.caption)
-        return await message.answer(result)
+        await message.answer(result)
     else:
-        return await message.answer('You not enter ID message')
+        await message.answer('You not enter ID message')
+    return await state.clear()
+
+
+@router.callback_query(lambda c: c.data == 'clear_keyboard')
+@auth_admin
+async def process_control_admins(callback_query: CallbackQuery):
+    kb = []
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    await callback_query.message.edit_reply_markup(reply_markup=keyboard)

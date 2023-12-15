@@ -1,27 +1,49 @@
-import telebot
-import schedule
-import random
-import time
 import datetime
-import sqlite3
+import logging
 import os
-from conf import start_times, db_path, send_chat_id, admin_id, bot_token
+import random
+import sqlite3
+import sys
+import time
+import requests
+import schedule
+from conf import bot_token, db_path, start_times
+from handlers.db import get_sendto, mess_reset, get_admins_list
+
+CHANNEL_ID = get_sendto()[0]
 
 
-def send_message():
+def send_photo(file_path, caption):
+    with open(file_path, 'rb') as img_file:
+        img = {'photo': ('_', img_file, 'image/jpeg')}
+        url = f'https://api.telegram.org/bot{bot_token}/sendPhoto?chat_id={CHANNEL_ID}&caption={caption}'
+        response = requests.post(url, files=img)
+        return response.text
+
+
+def send_text(message_text, send_to=CHANNEL_ID):
+    url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
+    response = requests.post(url, json={'chat_id': send_to, 'parse_mode': 'html', 'text': message_text})
+    return response.text
+
+
+def send_random_message():
     conn = sqlite3.connect(db_path())
     c = conn.cursor()
     c.execute('SELECT * FROM messages WHERE last_send is NULL')
     messages_db = c.fetchall()
-    if len(messages_db) < 1:
-        reset_sending_message(c, conn)
+    if len(messages_db) < 1:  # min count not send in db
+        admins = get_admins_list()
+        mess_text = mess_reset()
+        for admin in admins:
+            send_text(mess_text, admin[0])
     c.execute('SELECT * FROM messages WHERE last_send is NULL')
     messages_db = c.fetchall()
     message_db = messages_db[random.randint(0, len(messages_db) - 1)]
     message_id, text, last_sent = message_db
     img_mess = open_random_image(message_id)
     if img_mess:
-        send_photo(text, img_mess=img_mess)
+        send_photo(file_path=os.path.join(os.getcwd(), img_mess), caption=text)
     else:
         send_text(text)
     c.execute('UPDATE messages SET last_send=? WHERE ids=?',
@@ -30,23 +52,9 @@ def send_message():
     conn.close()
 
 
-def send_text(text):
-    bot.send_message(chat_id=send_chat_id, text=f'{text}')
-
-
-def send_photo(text, img_mess):
-    bot.send_photo(chat_id=send_chat_id, photo=open(img_mess, 'rb'), caption=f'{text}')
-
-
-def reset_sending_message(c, conn):
-    c.execute('UPDATE messages SET last_send = NULL;')
-    conn.commit()
-    bot.send_message(chat_id=admin_id, text=f'History sending messages is reset, new iteration started.')
-
-
 def open_random_image(message_id):
-    source_dir = 'img/'
     img_files = []
+    source_dir = 'img/'
     for path, dirs, files in os.walk(source_dir):
         for filename in files:
             fullpath = os.path.join(path, filename)
@@ -66,16 +74,15 @@ def open_random_image(message_id):
         return False
 
 
-def run():
+def main_run():
     print(f'Task will sending : {start_times}')
-
     for times in start_times:
-        schedule.every().day.at(times).do(send_message, send_chat_id=f'{send_chat_id}')
+        schedule.every().day.at(times).do(send_random_message)
     while True:
         schedule.run_pending()
         time.sleep(1)
 
 
 if __name__ == '__main__':
-    bot = telebot.TeleBot(bot_token)
-    run()
+    logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
+    main_run()
