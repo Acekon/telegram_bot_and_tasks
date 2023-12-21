@@ -6,7 +6,7 @@ import string
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
-full_path_img_dir = os.path.join(os.getcwd(), 'img\\')
+full_path_img_dir = os.path.join(os.getcwd(), 'img/')
 
 
 def get_collage(mess_id, type_collage=None):
@@ -39,7 +39,7 @@ def create_image_collage(image_paths):
     collage_size = (image_size[0] * len(image_paths), image_size[1])
     collage = Image.new('RGB', collage_size)
     for i, image_path in enumerate(image_paths):
-        img_name = image_path.split('\\')[-1]
+        img_name = image_path.split('/')[-1]
         image = Image.open(image_path)
         image = image.resize(image_size)
         im = ImageDraw.Draw(image)
@@ -61,7 +61,7 @@ def create_vertical_collage(image_paths):
     collage = Image.new('RGB', (collage_width, collage_height), (255, 255, 255))
     images_name = []
     for i, image_path in enumerate(image_paths):
-        img_name = image_path.split('\\')[-1]
+        img_name = image_path.split('/')[-1]
         images_name.append(img_name)
         image = Image.open(image_path)
         image = image.resize(image_size)
@@ -113,6 +113,4 @@ def remove_all_img(mess_id):
 
 
 if __name__ == '__main__':
-    # print(remove_img('E:\\Dev\\Project\\humor\\TG_task_and_bot_sender\\img\\2_3.png'))
-    # remove_all_img('48')
     pass
