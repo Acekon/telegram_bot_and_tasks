@@ -135,7 +135,12 @@ async def command_control(message: Message):
         [types.InlineKeyboardButton(text="Edit which chat to send to", callback_data=f'sendto_main')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
-    return await message.answer(f"Control bots settings\nStart times: {start_times}\nSent to: {get_sendto()[0]}",
+    sendto = get_sendto()
+    if sendto:
+        send_to_text = sendto[0]
+    else:
+        send_to_text = '-'
+    return await message.answer(f"Control bots settings\nStart times: {start_times}\nSent to: {send_to_text}",
                                 reply_markup=keyboard)
 
 
