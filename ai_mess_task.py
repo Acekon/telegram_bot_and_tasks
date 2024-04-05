@@ -29,14 +29,14 @@ def send_random_message():
     channel_id = get_sendto()[0]
     conn = sqlite3.connect(db_path())
     c = conn.cursor()
-    c.execute('SELECT * FROM messages WHERE last_send is NULL')
+    c.execute('SELECT * FROM messages WHERE last_send is NULL AND enable is True')
     messages_db = c.fetchall()
     if len(messages_db) < 1:  # min count not send in db
         admins = get_admins_list()
         mess_text = mess_reset()
         for admin in admins:
             send_text(mess_text, admin[0])
-    c.execute('SELECT * FROM messages WHERE last_send is NULL')
+    c.execute('SELECT ids, text_message, last_send  FROM messages WHERE last_send is NULL AND enable is True')
     messages_db = c.fetchall()
     message_db = messages_db[random.randint(0, len(messages_db) - 1)]
     message_id, text, last_sent = message_db
