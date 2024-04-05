@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, FSInputFile, InlineKeyboardMarkup, CallbackQuery
 from aiogram.filters.command import Command
 
-from handlers.db import search_mess, get_message_id, add_message, remove_message
+from handlers.db import search_mess, get_message_id, add_message, remove_message, message_enable, message_disable
 from handlers.img import get_collage, download_img, remove_img, remove_all_img
 from conf import bot_token
 from handlers.service import auth_admin
@@ -68,18 +68,25 @@ async def process_mess_get(message: Message, state: FSMContext):
     if not message_text:
         return await message.answer(f"Not found ID message")
     path_collage = get_collage(message.text)
+    if bool(int(message_text[2])):
+        state_bottoms = types.InlineKeyboardButton(text="⛔ Disable", callback_data=f'mess_disable:{message.text}')
+    else:
+        state_bottoms = types.InlineKeyboardButton(text="✅ Enable", callback_data=f'mess_enable:{message.text}')
     kb = [
         [types.InlineKeyboardButton(text="Remove Message & all Img", callback_data=f'remove_mess_img:{message.text}'),
          types.InlineKeyboardButton(text="Remove all Img", callback_data=f'remove_all_img:{message.text}')],
-        [types.InlineKeyboardButton(text="Edit image list", callback_data=f'edit_image_list:{message.text}')],
+        [types.InlineKeyboardButton(text="Edit image list", callback_data=f'edit_image_list:{message.text}'),
+         state_bottoms],
         [types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    mess_text = (f"ID: {message_text[0]} Enable: {bool(int(message_text[2]))}\n"
+                 f"Text: {message_text[1]}\n")
     if path_collage:
-        await message.answer_photo(FSInputFile(path_collage), caption=message_text[1], reply_markup=keyboard)
+        await message.answer_photo(FSInputFile(path_collage), caption=mess_text, reply_markup=keyboard)
         remove_img(path_collage)
     else:
-        await message.answer(message_text[1], reply_markup=keyboard)
+        await message.answer(mess_text, reply_markup=keyboard)
     return await state.clear()
 
 
@@ -124,6 +131,28 @@ async def command_remove_img(callback_query: CallbackQuery):
     remove_img(img_name=img_name, img_path=None)
     await callback_query.answer(text=f'Removed {img_name}')
     await callback_query.message.delete()
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('mess_enable:'))
+@auth_admin
+async def command_message_enable(callback_query: CallbackQuery):
+    message_id = callback_query.data.split(':')[-1]
+    message_enable(message_id)
+    await callback_query.answer(text=f'Enable message id: {message_id}')
+    kb = []
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    await callback_query.message.edit_reply_markup(reply_markup=keyboard)
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('mess_disable:'))
+@auth_admin
+async def command_message_enable(callback_query: CallbackQuery):
+    message_id = callback_query.data.split(':')[-1]
+    message_disable(message_id)
+    await callback_query.answer(text=f'Disable message id: {message_id}')
+    kb = []
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    await callback_query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.message(Command(commands=['create']))

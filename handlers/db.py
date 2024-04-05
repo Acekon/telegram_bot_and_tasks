@@ -47,7 +47,7 @@ def get_message_id(mess_id):
     try:
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        c.execute(f'SELECT ids, text_message FROM messages WHERE ids="{mess_id}"')
+        c.execute(f'SELECT ids, text_message, enable FROM messages WHERE ids="{mess_id}"')
         mess = c.fetchone()
         conn.commit()
         conn.close()
@@ -62,7 +62,7 @@ def add_message(text_message):
     try:
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        c.execute(f"INSERT INTO messages (text_message) VALUES ('{text_message}')")
+        c.execute(f"INSERT INTO messages (text_message, enable) VALUES ('{text_message}', '1')")
         conn.commit()
         c.execute('SELECT ids FROM messages ORDER BY ids DESC LIMIT 1')
         lats_sent = c.fetchone()
@@ -139,6 +139,7 @@ def create_all_table():
                   f'("ids"INTEGER,'
                   f'"text_message"TEXT NOT NULL,'
                   f'"last_send" TEXT DEFAULT NULL,'
+                  f'"enable" BLOB DEFAULT 1,'
                   f'PRIMARY KEY("ids" AUTOINCREMENT))')
         c.execute(f'CREATE TABLE "settings" ('
                   f'"id" INTEGER NOT NULL UNIQUE,'
@@ -182,6 +183,36 @@ def remove_sendto():
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
         count = c.execute(f'DELETE FROM settings WHERE name = "send_to";').rowcount
+        conn.commit()
+        conn.close()
+        if count != 0:
+            return True
+        else:
+            return False
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
+
+
+def message_disable(message_id):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        count = c.execute(f'UPDATE messages SET "enable"=0 WHERE "_rowid_"="{message_id}"').rowcount
+        conn.commit()
+        conn.close()
+        if count != 0:
+            return True
+        else:
+            return False
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
+
+
+def message_enable(message_id):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        count = c.execute(f'UPDATE messages SET "enable"=1 WHERE "_rowid_"="{message_id}"').rowcount
         conn.commit()
         conn.close()
         if count != 0:
