@@ -7,7 +7,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, FSInputFile, InlineKeyboardMarkup, CallbackQuery
 from aiogram.filters.command import Command
 
-from handlers.db import search_mess, get_message_id, add_message, remove_message, message_enable, message_disable
+from handlers.db import search_mess, get_message_id, add_message, remove_message, message_enable, message_disable, \
+    message_update_text
 from handlers.img import get_collage, download_img, remove_img, remove_all_img
 from conf import bot_token
 from handlers.service import auth_admin
@@ -29,6 +30,11 @@ class FormAddMess(StatesGroup):
 
 class FormGetIdImg(StatesGroup):
     mess_id = State()
+
+
+class FormReplaceMess(StatesGroup):
+    mess_id = None
+    state = State()
 
 
 @router.message(Command(commands=['search']))
@@ -73,15 +79,16 @@ async def process_mess_get(message: Message, state: FSMContext):
     else:
         state_bottoms = types.InlineKeyboardButton(text="✅ Enable", callback_data=f'mess_enable:{message.text}')
     kb = [
-        [types.InlineKeyboardButton(text="Remove Message & all Img", callback_data=f'remove_mess_img:{message.text}'),
-         types.InlineKeyboardButton(text="Remove all Img", callback_data=f'remove_all_img:{message.text}')],
-        [types.InlineKeyboardButton(text="Edit image list", callback_data=f'edit_image_list:{message.text}'),
-         state_bottoms],
+        [types.InlineKeyboardButton(text="Remove message", callback_data=f'remove_mess_img:{message.text}'),
+         types.InlineKeyboardButton(text="Remove all Img", callback_data=f'remove_all_img:{message.text}'),
+         types.InlineKeyboardButton(text="Edit image list", callback_data=f'edit_image_list:{message.text}')],
+        [state_bottoms,
+         types.InlineKeyboardButton(text="Replace message", callback_data=f'mess_replace:{message.text}')],
         [types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     mess_text = (f"ID: {message_text[0]} Enable: {bool(int(message_text[2]))}\n"
-                 f"Text: {message_text[1]}\n")
+                 f"Text:\n<code>{message_text[1]}</code>")
     if path_collage:
         await message.answer_photo(FSInputFile(path_collage), caption=mess_text, reply_markup=keyboard)
         remove_img(path_collage)
@@ -153,6 +160,26 @@ async def command_message_enable(callback_query: CallbackQuery):
     kb = []
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     await callback_query.message.edit_reply_markup(reply_markup=keyboard)
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('mess_replace:'))
+@auth_admin
+async def command_message_replace(callback_query: CallbackQuery, state: FSMContext):
+    await state.set_state(FormReplaceMess.state)
+    FormReplaceMess.mess_id = callback_query.data.split(':')[-1]
+    await callback_query.message.answer(f"Enter new message from save ID: {callback_query.data.split(':')[-1]}")
+
+
+@router.message(FormReplaceMess.state)
+@auth_admin
+async def process_mess_replace(message: Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    message_flag = message_update_text(FormReplaceMess.mess_id, message.text)
+    if message_flag:
+        await message.answer('Replace')
+    else:
+        await message.answer('Error')
+    return await state.clear()
 
 
 @router.message(Command(commands=['create']))

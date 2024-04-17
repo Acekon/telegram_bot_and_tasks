@@ -224,3 +224,21 @@ def message_enable(message_id):
             return False
     except sqlite3.OperationalError as err:
         return f"Error: {err}"
+
+
+def message_update_text(message_id, mess_text):
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        sql = f'UPDATE messages SET "text_message"="{mess_text.__str__()}" WHERE "_rowid_"="{message_id}"'
+        count = c.execute(f'UPDATE messages '
+                          f'SET "text_message"="{mess_text.__str__()}" '
+                          f'WHERE "_rowid_"="{message_id}"').rowcount
+        conn.commit()
+        conn.close()
+        if count != 0:
+            return True
+        else:
+            return False
+    except sqlite3.OperationalError as err:
+        return f"Error: {err}"
