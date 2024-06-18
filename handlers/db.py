@@ -236,7 +236,7 @@ def message_update_text(message_id, mess_text: str):
         c = conn.cursor()
         mess_text = mess_text.replace("'", '`')
         count = c.execute(f'UPDATE messages '
-                          f'SET "text_message"="{mess_text.__str__()}" '
+                          f'SET "text_message"="{mess_text}" '
                           f'WHERE "_rowid_"="{message_id}"').rowcount
         conn.commit()
         conn.close()
