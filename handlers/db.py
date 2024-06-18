@@ -62,9 +62,11 @@ def add_message(text_message):
     try:
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
+        print(text_message)
         text_message = text_message.replace("'", '`')
+        print(text_message)
         c.execute(
-            f"INSERT INTO messages (text_message, enable) VALUES ('{text_message.__str__}', '1')")
+            f"INSERT INTO messages (text_message, enable) VALUES ('{text_message}', '1')")
         conn.commit()
         c.execute('SELECT ids FROM messages ORDER BY ids DESC LIMIT 1')
         lats_sent = c.fetchone()
