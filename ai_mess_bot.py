@@ -52,7 +52,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.run:
         logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-        asyncio.run(main())
+        try:
+            asyncio.run(main())
+        except KeyboardInterrupt:
+            SystemExit('Stopped')
     elif args.generate:
         create_dirs()
         db_path()

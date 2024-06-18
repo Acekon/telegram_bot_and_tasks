@@ -62,7 +62,9 @@ def add_message(text_message):
     try:
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        c.execute(f"INSERT INTO messages (text_message, enable) VALUES ('{text_message}', '1')")
+        text_message = text_message.replace("'", '`')
+        c.execute(
+            f"INSERT INTO messages (text_message, enable) VALUES ('{text_message.__str__}', '1')")
         conn.commit()
         c.execute('SELECT ids FROM messages ORDER BY ids DESC LIMIT 1')
         lats_sent = c.fetchone()
@@ -226,11 +228,11 @@ def message_enable(message_id):
         return f"Error: {err}"
 
 
-def message_update_text(message_id, mess_text):
+def message_update_text(message_id, mess_text: str):
     try:
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        sql = f'UPDATE messages SET "text_message"="{mess_text.__str__()}" WHERE "_rowid_"="{message_id}"'
+        mess_text = mess_text.replace("'", '`')
         count = c.execute(f'UPDATE messages '
                           f'SET "text_message"="{mess_text.__str__()}" '
                           f'WHERE "_rowid_"="{message_id}"').rowcount

@@ -214,7 +214,7 @@ async def process_mess_add_img(message: Message, state: FSMContext):
         result = download_img(bot_token=bot_token, file_id=file_id, mess_id=message.caption)
         await message.answer(result)
     else:
-        await message.answer('You not enter ID message')
+        await message.answer('⚠ You not enter ID message')
     return await state.clear()
 
 
