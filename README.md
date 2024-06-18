@@ -1,4 +1,4 @@
-# Telegram Message Bot - v0.3.6
+# Telegram Message Bot - v0.3.7
 
 This repository contains a Telegram bot script that allows you to send messages and images to a chat at specified
 intervals using the Telegram Bot API. The bot is built using Python and utilizes the Aiogram library.
