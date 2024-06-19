@@ -30,6 +30,7 @@ class FormAddMess(StatesGroup):
 
 class FormGetIdImg(StatesGroup):
     mess_id = State()
+    mess_text = None
 
 
 class FormReplaceMess(StatesGroup):
@@ -208,13 +209,15 @@ async def command_upload_image(message: Message, state: FSMContext):
 @router.message(FormGetIdImg.mess_id)
 @auth_admin
 async def process_mess_add_img(message: Message, state: FSMContext):
+    if FormGetIdImg.mess_text is None:
+        FormGetIdImg.mess_text = message.caption
     await state.update_data(name=message.text)
-    if message.caption and message.caption.isdigit():
+    if message.content_type == 'photo' and FormGetIdImg.mess_text is not None:
         file_id = message.photo[-1].file_id
-        result = download_img(bot_token=bot_token, file_id=file_id, mess_id=message.caption)
-        await message.answer(result)
+        result = download_img(bot_token=bot_token, file_id=file_id, mess_id=FormGetIdImg.mess_text)
+        await message.answer(f"{result}")
     else:
-        await message.answer('⚠ You not enter ID message')
+        await message.answer("⚠ You not enter ID message")
     return await state.clear()
 
 
