@@ -53,7 +53,8 @@ def send_random_message():
 
 def open_random_image(message_id):
     img_files = []
-    source_dir = 'img/'
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    source_dir = os.path.join(script_dir, 'img\\')
     for path, dirs, files in os.walk(source_dir):
         for filename in files:
             fullpath = os.path.join(path, filename)
@@ -67,7 +68,10 @@ def open_random_image(message_id):
             except ValueError:
                 continue
     if len(img_files) != 0:
-        img = img_files[random.randrange(0, len(img_files))]
+        tmp_random_image = []
+        for _ in range(10):
+            tmp_random_image.append(random.randrange(0, len(img_files)))
+        img = img_files[tmp_random_image[random.randrange(0, 8)]]
         return img
     else:
         return False
