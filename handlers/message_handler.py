@@ -202,6 +202,7 @@ async def process_mess_add(message: Message, state: FSMContext):
 @router.message(Command(commands=['upload']))
 @auth_admin
 async def command_upload_image(message: Message, state: FSMContext):
+    FormGetIdImg.mess_text = None
     await state.set_state(FormGetIdImg.mess_id)
     await message.answer(f"Upload file and Enter ID message:")
 

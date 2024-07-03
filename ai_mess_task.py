@@ -2,11 +2,14 @@ import datetime
 import logging
 import os
 import random
+import re
 import sqlite3
 import sys
 import time
+
 import requests
 import schedule
+import fnmatch
 from conf import bot_token, db_path, start_times
 from handlers.db import get_sendto, mess_reset, get_admins_list
 
@@ -51,22 +54,34 @@ def send_random_message():
     conn.close()
 
 
+def get_send_last_img(message_id):
+    conn = sqlite3.connect(db_path())
+    c = conn.cursor()
+    c.execute(f'SELECT last_img FROM messages WHERE ids={message_id}')
+    messages_db = c.fetchone()
+    return messages_db[0]
+
+
+def save_last_img(message_id, file_name):
+    conn = sqlite3.connect(db_path())
+    c = conn.cursor()
+    c.execute(f"UPDATE messages SET last_img='{file_name}' WHERE ids={message_id}")
+    conn.commit()
+    conn.close()
+
+
 def open_random_image(message_id):
     img_files = []
     script_dir = os.path.dirname(os.path.abspath(__file__))
     source_dir = os.path.join(script_dir, 'img\\')
+    pattern = f'{message_id}_*'
     for path, dirs, files in os.walk(source_dir):
-        for filename in files:
+        matched_strings = fnmatch.filter(files, pattern)
+        for filename in matched_strings:
             fullpath = os.path.join(path, filename)
-            try:
-                if int(filename.split('_')[0]) == message_id:
-                    img_files.append(fullpath)
-                else:
-                    if len(img_files) >= 1:
-                        break
-                    continue
-            except ValueError:
-                continue
+            img_files.append(fullpath)
+        else:
+            break
     if len(img_files) != 0:
         tmp_random_image = []
         for _ in range(10):
