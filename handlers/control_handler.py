@@ -9,6 +9,7 @@ from aiogram.filters.command import Command, CommandStart
 from conf import start_times
 from handlers.db import check_last_sent_status, mess_reset, get_admins_list, remove_admin_list, add_admin_list, \
     get_sendto, add_sendto, remove_sendto
+from handlers.logger_setup import logger
 from handlers.service import auth_admin
 
 router = Router()
@@ -175,6 +176,7 @@ async def process_remove_admins(callback_query: CallbackQuery):
     if remove_admin_list(callback_query.data.split(':')[-1]):
         return await callback_query.answer(f"Removed admin: {callback_query.data.split(':')[-1]}")
     else:
+        logger.error(f"Err remove: {callback_query.data.split(':')[-1]}")
         return await callback_query.answer(f"Err remove: {callback_query.data.split(':')[-1]}")
 
 
@@ -198,7 +200,8 @@ async def process_mess_search(message: Message, state: FSMContext):
         else:
             await message.answer(f'Err: {admin_id}, {description}\n {result}')
     except ValueError:
-        await message.answer('Err: required\n<b>12345678,NameAdmin</b>')
+        logger.error(f"ValueError: required\n<b>12345678,NameAdmin</b>")
+        await message.answer('ValueError: required\n<b>12345678,NameAdmin</b>')
     return await state.clear()
 
 
@@ -242,6 +245,7 @@ async def process_sendto_add(message: Message, state: FSMContext):
         else:
             await message.answer(f'Err: {chanel_id}, {description}\n {result}')
     except ValueError:
+        logger.error(f"ValueError:  required\n<b>-123456789987456321,ChanelName</b>")
         await message.answer('Err: required\n<b>-123456789987456321,ChanelName</b>')
     return await state.clear()
 

@@ -6,6 +6,8 @@ import string
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
+from handlers.service import logger
+
 full_path_img_dir = os.path.join(os.getcwd(), 'img/')
 
 
@@ -24,6 +26,7 @@ def get_collage(mess_id, type_collage=None):
             collage_path = create_image_collage(matching_files)
             return collage_path
     except FileNotFoundError:
+        logger.error(f"FileNotFoundError: please create {full_path_img_dir} dir")
         return f'Error please create {full_path_img_dir} dir'
 
 
@@ -94,6 +97,7 @@ def remove_img(img_path, img_name=None):
         os.remove(img_path)
         return True
     else:
+        logger.error(f"File not found: ({img_path})")
         return f"File not found: ({img_path})"
 
 

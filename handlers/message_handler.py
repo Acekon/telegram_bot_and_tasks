@@ -11,6 +11,7 @@ from handlers.db import search_mess, get_message_id, add_message, remove_message
     message_update_text
 from handlers.img import get_collage, download_img, remove_img, remove_all_img
 from conf import bot_token
+from handlers.logger_setup import logger
 from handlers.service import auth_admin
 
 router = Router()
@@ -73,6 +74,7 @@ async def process_mess_get(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     message_text = get_message_id(message.text)
     if not message_text:
+        logger.error(f"Err: Not found ID message")
         return await message.answer(f"Not found ID message")
     path_collage = get_collage(message.text)
     if bool(int(message_text[2])):
@@ -113,6 +115,7 @@ async def command_remove_message_img(callback_query: CallbackQuery):
     files_name = remove_all_img(id_message)
     mess = remove_message(id_message)
     if not mess:
+        logger.error(f"Message not found")
         mess = 'Message not found'
     else:
         mess = 'Message removed'
@@ -179,6 +182,7 @@ async def process_mess_replace(message: Message, state: FSMContext):
     if message_flag:
         await message.answer('Replace')
     else:
+        logger.error(f"Err Replace")
         await message.answer('Error')
     return await state.clear()
 
@@ -218,6 +222,7 @@ async def process_mess_add_img(message: Message, state: FSMContext):
         result = download_img(bot_token=bot_token, file_id=file_id, mess_id=FormGetIdImg.mess_text)
         await message.answer(f"{result}")
     else:
+        logger.error(f"Err: You not enter ID message")
         await message.answer("⚠ You not enter ID message")
     return await state.clear()
 
