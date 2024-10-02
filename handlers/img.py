@@ -1,4 +1,5 @@
 import fnmatch
+import json
 import os
 import random
 import string
@@ -116,5 +117,53 @@ def remove_all_img(mess_id):
         return False
 
 
+def img_journal_create_json_file(images: tuple[str, list]):
+    """Create json file to list images"""
+    file = {}
+    result_files_list = []
+    for img in images[1]:
+        file['file_name'] = img
+        file['file_send'] = 0
+        result_files_list.append(file)
+    with open(f"{full_path_img_dir}{images[0]}.json", 'w') as f:
+        json.dump({images[0]:result_files_list}, f)
+        f.close()
+
+
+def img_journal_generate_all_json_files():
+    """Find all images in folder"""
+    files_name = []
+    images_list = {}
+    current_id = ''
+    for file_name in os.listdir(full_path_img_dir):
+        if fnmatch.fnmatch(file_name, '*_*.png'):
+            if len(files_name) == 0:
+                files_name.append(file_name)
+            if current_id == file_name.split('_')[0]:
+                files_name.append(file_name)
+            else:
+                images_list[current_id] = files_name
+                current_id = file_name.split('_')[0]
+                files_name = []
+    for image in images_list.items():
+        if not os.path.isfile(f'{full_path_img_dir}{image[0]}.json'):
+            img_journal_create_json_file(image)
+
+
+def img_journal_append_json_file(jsonfile_images, new_image_name):
+    if not os.path.isfile(jsonfile_images):
+        return False
+    with open(jsonfile_images, 'r') as f:
+        images_list = json.load(f)
+        image_id = list(images_list.keys())[0]
+        new_image_list = images_list.get(image_id)
+        new_image_list.append(new_image_name)
+    with open(jsonfile_images, 'w') as f:
+        images_list[image_id] = new_image_list
+        json.dump(images_list, f)
+        f.close()
+
+
 if __name__ == '__main__':
     pass
+    

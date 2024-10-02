@@ -2,7 +2,6 @@ import datetime
 import logging
 import os
 import random
-import re
 import sqlite3
 import sys
 import time
@@ -78,8 +77,8 @@ def open_random_image(message_id):
     for path, dirs, files in os.walk(source_dir):
         matched_strings = fnmatch.filter(files, pattern)
         for filename in matched_strings:
-            fullpath = os.path.join(path, filename)
-            img_files.append(fullpath)
+            full_path = os.path.join(path, filename)
+            img_files.append(full_path)
         else:
             break
     if len(img_files) != 0:
