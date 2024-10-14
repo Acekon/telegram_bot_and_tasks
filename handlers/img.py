@@ -121,10 +121,12 @@ def img_journal_create_json_file(images: tuple[str, list]):
     """Create json file to list images"""
     file = {}
     result_files_list = []
-    for img in images[1]:
+    file_list = images[1]
+    for img in file_list:
         file['file_name'] = img
         file['file_send'] = 0
         result_files_list.append(file)
+        file = {}
     with open(f"{full_path_img_dir}{images[0]}.json", 'w') as f:
         json.dump({images[0]: result_files_list}, f)
         f.close()
@@ -175,6 +177,30 @@ def img_journal_append_json_file(jsonfile_images, new_image_name):
         f.close()
 
 
+def img_journal_pop_json_file(jsonfile_images, pop_image_name):
+    logger.info(f'Try to pop image ({pop_image_name}) from json ({jsonfile_images})')
+    if not os.path.isfile(f'img/{jsonfile_images}'):
+        logger.error(f"File not found: ({jsonfile_images})")
+        return False
+    with open(f'img/{jsonfile_images}', 'r') as f:
+        new_image_list = []
+        images_list = json.load(f)
+        image_id = list(images_list.keys())[0]
+        current_image_list = images_list.get(image_id)
+        for image in current_image_list:
+            if pop_image_name != image['file_name']:
+                new_image_list.append(image)
+    if new_image_list != current_image_list:
+        logger.info(f'Image popped from json ({pop_image_name})')
+    else:
+        logger.info(f'Image not popped from json ({pop_image_name})')
+    with open(f'img/{jsonfile_images}', 'w') as f:
+        images_list[image_id] = new_image_list
+        json.dump(images_list, f)
+        f.close()
+
+
 if __name__ == '__main__':
-    img_journal_regenerate_all_json_file()
-    #img_journal_generate_json_file(image_id=3)
+    #img_journal_regenerate_all_json_file()
+    img_journal_pop_json_file(jsonfile_images='1.json', pop_image_name='1_buOYGR.png')
+
