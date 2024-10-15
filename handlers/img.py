@@ -177,7 +177,8 @@ def img_journal_append_json_file(jsonfile_images, new_image_name):
         f.close()
 
 
-def img_journal_pop_json_file(jsonfile_images, pop_image_name):
+def img_journal_pop_json_file(jsonfile_images: str | int, pop_image_name):
+    """Pop images from json file"""
     logger.info(f'Try to pop image ({pop_image_name}) from json ({jsonfile_images})')
     if not os.path.isfile(f'img/{jsonfile_images}'):
         logger.error(f"File not found: ({jsonfile_images})")
@@ -200,7 +201,30 @@ def img_journal_pop_json_file(jsonfile_images, pop_image_name):
         f.close()
 
 
-if __name__ == '__main__':
-    #img_journal_regenerate_all_json_file()
-    img_journal_pop_json_file(jsonfile_images='1.json', pop_image_name='1_buOYGR.png')
+def img_journal_is_send_json_file(jsonfile_images, image_name):
+    """Marked is send image on json file"""
+    if jsonfile_images.split('.')[0] != image_name.split('_')[0]:
+        logger.error(f"File ({jsonfile_images}) not equal to image ({image_name})")
+        return False
+    if not os.path.isfile(f'img/{jsonfile_images}'):
+        logger.error(f"File not found: ({jsonfile_images})")
+        return False
+    with open(f'img/{jsonfile_images}', 'r') as f:
+        new_image_list = []
+        images_list = json.load(f)
+        image_id = list(images_list.keys())[0]
+        current_image_list = images_list.get(image_id)
+        for image in current_image_list:
+            if image_name == image['file_name']:
+                image['file_send'] = 1
+            new_image_list.append(image)
+        with open(f'img/{jsonfile_images}', 'w') as f:
+            images_list[image_id] = new_image_list
+            json.dump(images_list, f)
+            f.close()
 
+
+if __name__ == '__main__':
+    img_journal_is_send_json_file(jsonfile_images='1.json', image_name='1_CDhoqA.png')
+    with open('img/1.json') as f:
+        print(f.read())
