@@ -103,6 +103,7 @@ def remove_img(img_path, img_name=None):
 
 
 def remove_all_img(mess_id):
+    """Examples: mess_id = 101"""
     matching_files = []
     files_name = []
     for file_name in os.listdir(full_path_img_dir):
@@ -117,7 +118,19 @@ def remove_all_img(mess_id):
         return False
 
 
-def img_journal_remove_json_file(jsonfile_mess_id):
+def remove_json_file_img(mess_id):
+    """Remove json file
+    Examples: mess_id = 101"""
+    full_path_json_file = os.path.join(full_path_img_dir, f"{mess_id}.json")
+    if os.path.isfile(f'{full_path_json_file}'):
+        os.remove(full_path_json_file)
+        return True
+    else:
+        logger.error(f"File not found: ({full_path_json_file})")
+        return f"File not found: ({full_path_json_file})"
+
+
+def img_journal_remove_img_json_file(jsonfile_mess_id):
     """Remove json file"""
     logger.info(f"Try to remove {jsonfile_mess_id}.json file")
     file_path = os.path.join(full_path_img_dir, f"{jsonfile_mess_id}.json")
@@ -141,12 +154,13 @@ def img_journal_create_json_file(images: tuple[str, list]):
     file_data = {}
     result_files_list = []
     file_list = images[1]
+    file_path = os.path.join(full_path_img_dir, f"{images[0]}.json")
     for img in file_list:
         file_data['file_name'] = img
         file_data['file_send'] = 0
         result_files_list.append(file_data)
         file_data = {}
-    with open(f"{full_path_img_dir}{images[0]}.json", 'w') as file:
+    with open(file_path, 'w') as file:
         json.dump({images[0]: result_files_list}, file)
         file.close()
 
@@ -182,15 +196,16 @@ def img_journal_regenerate_all_json_file():
 
 
 def img_journal_append_json_file(jsonfile_mess_id, new_image_name):
-    if not os.path.isfile(jsonfile_mess_id):
+    file_path = os.path.join(full_path_img_dir, f"{jsonfile_mess_id}.json")
+    if not os.path.isfile(file_path):
         return False
-    with open(jsonfile_mess_id, 'r') as file:
+    with open(file_path, 'r') as file:
         dict_file = {'file_name': new_image_name, 'file_send': 0}
         images_list = json.load(file)
         image_id = list(images_list.keys())[0]
         new_image_list = images_list.get(image_id)
         new_image_list.append(dict_file)
-    with open(jsonfile_mess_id, 'w') as file:
+    with open(file_path, 'w') as file:
         images_list[image_id] = new_image_list
         json.dump(images_list, file)
         file.close()
@@ -199,10 +214,11 @@ def img_journal_append_json_file(jsonfile_mess_id, new_image_name):
 def img_journal_pop_json_file(jsonfile_mess_id: str | int, pop_image_name):
     """Pop images from json file"""
     logger.info(f'Try to pop image ({pop_image_name}) from json ({jsonfile_mess_id})')
-    if not os.path.isfile(f'img/{jsonfile_mess_id}'):
-        logger.error(f"File not found: ({jsonfile_mess_id})")
+    file_path = os.path.join(full_path_img_dir, f"{jsonfile_mess_id}.json")
+    if not os.path.isfile(file_path):
+        logger.error(f"File not found: ({file_path})")
         return False
-    with open(f'img/{jsonfile_mess_id}', 'r') as file:
+    with open(file_path, 'r') as file:
         new_image_list = []
         images_list = json.load(file)
         image_id = list(images_list.keys())[0]
@@ -214,7 +230,7 @@ def img_journal_pop_json_file(jsonfile_mess_id: str | int, pop_image_name):
         logger.info(f'Image popped from json ({pop_image_name})')
     else:
         logger.info(f'Image not popped from json ({pop_image_name})')
-    with open(f'img/{jsonfile_mess_id}', 'w') as file:
+    with open(file_path, 'w') as file:
         images_list[image_id] = new_image_list
         json.dump(images_list, file)
         file.close()
@@ -222,13 +238,14 @@ def img_journal_pop_json_file(jsonfile_mess_id: str | int, pop_image_name):
 
 def img_journal_is_send_json_file(jsonfile_mess_id, image_name):
     """Marked is send image on json file"""
+    file_path = os.path.join(full_path_img_dir, f"{jsonfile_mess_id}.json")
     if jsonfile_mess_id.split('.')[0] != image_name.split('_')[0]:
         logger.error(f"File ({jsonfile_mess_id}) not equal to image ({image_name})")
         return False
-    if not os.path.isfile(f'img/{jsonfile_mess_id}'):
-        logger.error(f"File not found: ({jsonfile_mess_id})")
+    if not os.path.isfile(file_path):
+        logger.error(f"File not found: ({file_path})")
         return False
-    with open(f'img/{jsonfile_mess_id}', 'r') as file:
+    with open(file_path, 'r') as file:
         new_image_list = []
         images_list = json.load(file)
         image_id = list(images_list.keys())[0]
@@ -237,11 +254,11 @@ def img_journal_is_send_json_file(jsonfile_mess_id, image_name):
             if image_name == image['file_name']:
                 image['file_send'] = 1
             new_image_list.append(image)
-        with open(f'img/{jsonfile_mess_id}', 'w') as file:
+        with open(file_path, 'w') as file:
             images_list[image_id] = new_image_list
             json.dump(images_list, file)
             file.close()
 
 
 if __name__ == '__main__':
-    img_journal_remove_json_file(0)
+    pass
