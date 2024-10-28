@@ -118,20 +118,9 @@ def remove_all_img(mess_id):
         return False
 
 
-def remove_json_file_img(mess_id):
+def img_journal_remove_img_json_file(jsonfile_mess_id):
     """Remove json file
     Examples: mess_id = 101"""
-    full_path_json_file = os.path.join(full_path_img_dir, f"{mess_id}.json")
-    if os.path.isfile(f'{full_path_json_file}'):
-        os.remove(full_path_json_file)
-        return True
-    else:
-        logger.error(f"File not found: ({full_path_json_file})")
-        return f"File not found: ({full_path_json_file})"
-
-
-def img_journal_remove_img_json_file(jsonfile_mess_id):
-    """Remove json file"""
     logger.info(f"Try to remove {jsonfile_mess_id}.json file")
     file_path = os.path.join(full_path_img_dir, f"{jsonfile_mess_id}.json")
     if not os.path.isfile(file_path):
