@@ -118,16 +118,16 @@ def remove_all_img(mess_id):
         return False
 
 
-def img_journal_remove_img_json_file(jsonfile_mess_id):
+def img_journal_remove_img_json_file(json_file_mess_id):
     """Remove json file
     Examples: mess_id = 101"""
-    logger.info(f"Try to remove {jsonfile_mess_id}.json file")
-    file_path = os.path.join(full_path_img_dir, f"{jsonfile_mess_id}.json")
+    logger.info(f"Try to remove {json_file_mess_id}.json file")
+    file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
     if not os.path.isfile(file_path):
-        logger.error(f"File not found: ({jsonfile_mess_id}.json)")
+        logger.error(f"File not found: ({json_file_mess_id}.json)")
         return False
     for file_name in os.listdir(full_path_img_dir):
-        if fnmatch.fnmatch(file_name, f'{jsonfile_mess_id}_*.png'):
+        if fnmatch.fnmatch(file_name, f'{json_file_mess_id}_*.png'):
             logger.error(f"File not delete is found image: ({file_name})")
             return False
     try:
@@ -184,8 +184,8 @@ def img_journal_regenerate_all_json_file():
         img_journal_generate_json_file(id_list)
 
 
-def img_journal_append_json_file(jsonfile_mess_id, new_image_name):
-    file_path = os.path.join(full_path_img_dir, f"{jsonfile_mess_id}.json")
+def img_journal_append_json_file(json_file_mess_id, new_image_name):
+    file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
     if not os.path.isfile(file_path):
         return False
     with open(file_path, 'r') as file:
@@ -200,10 +200,10 @@ def img_journal_append_json_file(jsonfile_mess_id, new_image_name):
         file.close()
 
 
-def img_journal_pop_json_file(jsonfile_mess_id: str | int, pop_image_name):
+def img_journal_pop_json_file(json_file_mess_id: str | int, pop_image_name):
     """Pop images from json file"""
-    logger.info(f'Try to pop image ({pop_image_name}) from json ({jsonfile_mess_id})')
-    file_path = os.path.join(full_path_img_dir, f"{jsonfile_mess_id}.json")
+    logger.info(f'Try to pop image ({pop_image_name}) from json ({json_file_mess_id})')
+    file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
     if not os.path.isfile(file_path):
         logger.error(f"File not found: ({file_path})")
         return False
@@ -225,11 +225,11 @@ def img_journal_pop_json_file(jsonfile_mess_id: str | int, pop_image_name):
         file.close()
 
 
-def img_journal_is_send_json_file(jsonfile_mess_id, image_name):
+def img_journal_is_send_json_file(json_file_mess_id, image_name):
     """Marked is send image on json file"""
-    file_path = os.path.join(full_path_img_dir, f"{jsonfile_mess_id}.json")
-    if jsonfile_mess_id.split('.')[0] != image_name.split('_')[0]:
-        logger.error(f"File ({jsonfile_mess_id}) not equal to image ({image_name})")
+    file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
+    if json_file_mess_id.split('.')[0] != image_name.split('_')[0]:
+        logger.error(f"File ({json_file_mess_id}) not equal to image ({image_name})")
         return False
     if not os.path.isfile(file_path):
         logger.error(f"File not found: ({file_path})")
