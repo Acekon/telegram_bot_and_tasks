@@ -9,6 +9,7 @@ from aiogram.filters.command import Command, CommandStart
 from conf import start_times
 from handlers.db import check_last_sent_status, mess_reset, get_admins_list, remove_admin_list, add_admin_list, \
     get_sendto, add_sendto, remove_sendto
+from handlers.img import img_journal_regenerate_all_json_file
 from handlers.logger_setup import logger
 from handlers.service import auth_admin
 
@@ -134,6 +135,7 @@ async def command_control(message: Message):
         [types.InlineKeyboardButton(text="Control admins", callback_data=f'control_admins')],
         [types.InlineKeyboardButton(text="Reset sending message", callback_data=f'reset')],
         [types.InlineKeyboardButton(text="Edit which chat to send to", callback_data=f'sendto_main')],
+        [types.InlineKeyboardButton(text="🔴 reset all history send", callback_data=f'history_reset')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     sendto = get_sendto()
@@ -260,3 +262,25 @@ async def process_remove_sendto(callback_query: CallbackQuery):
         return await callback_query.answer(f"Removed sendto Chanel ID")
     else:
         return await callback_query.answer(f"Err remove")
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('history_reset'))
+@auth_admin
+async def process_journal_json_reset_admins(callback_query: CallbackQuery):
+    kb = [
+        [types.InlineKeyboardButton(text="🔴 Yes", callback_data=f'yes_history_reset')],
+        [types.InlineKeyboardButton(text="🟢 No", callback_data=f'clear_keyboard')],
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    await callback_query.message.edit_text(reply_markup=keyboard,
+                                           text="You start clear all history sending all messages")
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('yes_history_reset'))
+@auth_admin
+async def process_journal_json_reset_admins(callback_query: CallbackQuery):
+    kb = []
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    img_journal_regenerate_all_json_file()
+    await callback_query.message.edit_text(reply_markup=keyboard,
+                                           text="History is reset")
