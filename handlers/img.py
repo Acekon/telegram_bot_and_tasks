@@ -87,6 +87,7 @@ def download_img(file_id, bot_token, mess_id):
     random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(6))
     with open(f"img/{mess_id}_{random_prefix_file}.png", 'wb') as f:
         f.write(response_img.content)
+        img_journal_append_json_file(json_file_mess_id=mess_id, new_image_name=f"{mess_id}_{random_prefix_file}.png")
     return f"File {mess_id}_{random_prefix_file}.png is uploads"
 
 

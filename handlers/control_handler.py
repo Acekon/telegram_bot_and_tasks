@@ -135,7 +135,7 @@ async def command_control(message: Message):
         [types.InlineKeyboardButton(text="Control admins", callback_data=f'control_admins')],
         [types.InlineKeyboardButton(text="Reset sending message", callback_data=f'reset')],
         [types.InlineKeyboardButton(text="Edit which chat to send to", callback_data=f'sendto_main')],
-        [types.InlineKeyboardButton(text="🔴 reset all history send", callback_data=f'history_reset')],
+        [types.InlineKeyboardButton(text="🔴 Reset all history send", callback_data=f'history_reset')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     sendto = get_sendto()
@@ -143,7 +143,13 @@ async def command_control(message: Message):
         send_to_text = sendto[0]
     else:
         send_to_text = '-'
-    return await message.answer(f"Control bots settings\nStart times: {start_times}\nSent to: {send_to_text}",
+    return await message.answer(f"Control bots settings\n"
+                                f"1. Change administrators\n"
+                                f"2. Resetting the message sending history (new message sending cycle)\n"
+                                f"3. Change chat ID for sending messages\n"
+                                f"4. Reset history all images\n"
+                                f"Start times:<code> {start_times}</code>\n"
+                                f"Sent to:<code> {send_to_text}</code>",
                                 reply_markup=keyboard)
 
 
