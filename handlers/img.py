@@ -13,18 +13,15 @@ full_path_img_dir = os.path.join(os.getcwd(), 'img/')
 
 
 def get_collage(mess_id, type_collage=None):
+    """Default: type_collage=none
+     type_collage = vertical"""
     try:
-        matching_files = []
-        files_name = []
-        for file_name in os.listdir(full_path_img_dir):
-            if fnmatch.fnmatch(file_name, f'{mess_id}_*.png'):
-                matching_files.append(os.path.abspath(full_path_img_dir + file_name))
-                files_name.append(file_name)
-        if matching_files:
+        files_name = img_journal_get_image_list(str(mess_id))
+        if files_name:
             if type_collage == 'vertical':
-                collage_path = create_vertical_collage(matching_files)
+                collage_path = create_vertical_collage(files_name)
                 return collage_path
-            collage_path = create_image_collage(matching_files)
+            collage_path = create_image_collage(files_name)
             return collage_path
     except FileNotFoundError:
         logger.error(f"FileNotFoundError: please create {full_path_img_dir} dir")
@@ -93,9 +90,12 @@ def download_img(file_id, bot_token, mess_id):
 
 def remove_img(img_path, img_name=None):
     if img_name:
+        logger.info(f"Try remove image name: ({img_name})")
+        img_journal_pop_json_file(json_file_mess_id=img_name.split('_')[0], pop_image_name=img_name)
         os.remove(full_path_img_dir + img_name)
         return True
     if os.path.isfile(f'{img_path}'):
+        logger.info(f"Try remove image path: ({img_path})")
         os.remove(img_path)
         return True
     else:
@@ -244,10 +244,27 @@ def img_journal_is_send_json_file(json_file_mess_id, image_name):
             if image_name == image['file_name']:
                 image['file_send'] = 1
             new_image_list.append(image)
-        with open(file_path, 'w') as file:
+        with open(file_path, 'w') as file_write:
             images_list[image_id] = new_image_list
-            json.dump(images_list, file)
-            file.close()
+            json.dump(images_list, file_write)
+            file_write.close()
+
+
+def img_journal_get_image_list(json_file_mess_id):
+    file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
+    full_path_image_list = []
+    if not os.path.isfile(file_path):
+        logger.error(f"File not found: ({file_path})")
+        return False
+    with open(file_path, 'r') as file:
+        images_list = json.load(file)
+        for image in images_list.get(str(json_file_mess_id)):
+            path = os.path.join(full_path_img_dir, image.get('file_name'))
+            if not os.path.isfile(path):
+                logger.error(f"File not found: ({path})")
+            full_path_image_list.append(path)
+    
+    return full_path_image_list
 
 
 if __name__ == '__main__':

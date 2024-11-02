@@ -83,7 +83,7 @@ async def process_mess_get(message: Message, state: FSMContext):
         state_bottoms = types.InlineKeyboardButton(text="✅ Enable", callback_data=f'mess_enable:{message.text}')
     kb = [
         [types.InlineKeyboardButton(text="Remove message", callback_data=f'remove_mess_img:{message.text}'),
-         types.InlineKeyboardButton(text="Remove all Img", callback_data=f'remove_all_img:{message.text}'),
+         # types.InlineKeyboardButton(text="Remove all Img", callback_data=f'remove_all_img:{message.text}'), # disable
          types.InlineKeyboardButton(text="Edit image list", callback_data=f'edit_image_list:{message.text}')],
         [state_bottoms,
          types.InlineKeyboardButton(text="Replace message", callback_data=f'mess_replace:{message.text}')],
