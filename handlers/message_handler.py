@@ -9,7 +9,7 @@ from aiogram.filters.command import Command
 
 from handlers.db import search_mess, get_message_id, add_message, remove_message, message_enable, message_disable, \
     message_update_text
-from handlers.img import get_collage, download_img, remove_img, remove_all_img
+from handlers.img import get_collage, download_img, remove_img, remove_all_img, img_journal_create_json_file
 from conf import bot_token
 from handlers.logger_setup import logger
 from handlers.service import auth_admin
@@ -77,18 +77,19 @@ async def process_mess_get(message: Message, state: FSMContext):
         logger.error(f"Err: Not found ID message")
         return await message.answer(f"Not found ID message")
     path_collage = get_collage(message.text)
+    kb = []
     if bool(int(message_text[2])):
         state_bottoms = types.InlineKeyboardButton(text="⛔ Disable", callback_data=f'mess_disable:{message.text}')
     else:
         state_bottoms = types.InlineKeyboardButton(text="✅ Enable", callback_data=f'mess_enable:{message.text}')
-    kb = [
-        [types.InlineKeyboardButton(text="Remove message", callback_data=f'remove_mess_img:{message.text}'),
-         # types.InlineKeyboardButton(text="Remove all Img", callback_data=f'remove_all_img:{message.text}'), # disable
-         types.InlineKeyboardButton(text="Edit image list", callback_data=f'edit_image_list:{message.text}')],
-        [state_bottoms,
-         types.InlineKeyboardButton(text="Replace message", callback_data=f'mess_replace:{message.text}')],
-        [types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')],
-    ]
+    kb_line_one = [types.InlineKeyboardButton(text="Remove message", callback_data=f'remove_mess_img:{message.text}')]
+    if path_collage:
+        kb_line_one.append(types.InlineKeyboardButton(text="Edit image list", callback_data=f'edit_image_list:{message.text}'))
+    kb_line_two = [state_bottoms, types.InlineKeyboardButton(text="Replace message", callback_data=f'mess_replace:{message.text}') ]
+    kb_line_three = [types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')]
+    kb.append(kb_line_one)
+    kb.append(kb_line_two)
+    kb.append(kb_line_three)
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     mess_text = (f"ID: {message_text[0]} Enable: {bool(int(message_text[2]))}\n"
                  f"Text:\n<code>{message_text[1]}</code>")
@@ -199,6 +200,7 @@ async def command_add_message(message: Message, state: FSMContext):
 async def process_mess_add(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     message_text = add_message(message.text)
+    img_journal_create_json_file(images=(f'{message_text.split("=")[-1].strip()}', []))
     await message.answer(message_text)
     return await state.clear()
 

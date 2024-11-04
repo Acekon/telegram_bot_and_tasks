@@ -261,7 +261,8 @@ def img_journal_get_image_list(json_file_mess_id):
         for image in images_list.get(str(json_file_mess_id)):
             path = os.path.join(full_path_img_dir, image.get('file_name'))
             if not os.path.isfile(path):
-                logger.error(f"File not found: ({path})")
+                logger.error(f"Image not found: ({path})")
+
             full_path_image_list.append(path)
     
     return full_path_image_list
