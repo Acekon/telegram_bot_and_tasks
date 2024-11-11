@@ -9,7 +9,8 @@ from aiogram.filters.command import Command
 
 from handlers.db import search_mess, get_message_id, add_message, remove_message, message_enable, message_disable, \
     message_update_text
-from handlers.img import get_collage, download_img, remove_img, remove_all_img, img_journal_create_json_file
+from handlers.img import get_collage, download_img, remove_img, remove_all_img, img_journal_create_json_file, \
+    img_journal_get_image_list
 from conf import bot_token
 from handlers.logger_setup import logger
 from handlers.service import auth_admin
@@ -84,9 +85,13 @@ async def process_mess_get(message: Message, state: FSMContext):
         state_bottoms = types.InlineKeyboardButton(text="✅ Enable", callback_data=f'mess_enable:{message.text}')
     kb_line_one = [types.InlineKeyboardButton(text="Remove message", callback_data=f'remove_mess_img:{message.text}')]
     if path_collage:
-        kb_line_one.append(types.InlineKeyboardButton(text="Edit image list", callback_data=f'edit_image_list:{message.text}'))
-    kb_line_two = [state_bottoms, types.InlineKeyboardButton(text="Replace message", callback_data=f'mess_replace:{message.text}') ]
-    kb_line_three = [types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')]
+        kb_line_one.append(types.InlineKeyboardButton(text="Edit image list",
+                                                      callback_data=f'edit_image_list:{message.text}'))
+    kb_line_two = [state_bottoms,
+                   types.InlineKeyboardButton(text="Replace message",
+                                              callback_data=f'mess_replace:{message.text}')]
+    kb_line_three = [types.InlineKeyboardButton(text="Cancel",
+                                                callback_data=f'clear_keyboard')]
     kb.append(kb_line_one)
     kb.append(kb_line_two)
     kb.append(kb_line_three)
@@ -132,7 +137,16 @@ async def command_edit_image_list(callback_query: CallbackQuery):
     for img_name in images_name:
         kb.append([types.InlineKeyboardButton(text=f"Remove: {img_name} ?", callback_data=f'remove_img:{img_name}')])
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
-    await callback_query.message.answer_photo(FSInputFile(path_collage), reply_markup=keyboard)
+    history_list_image = img_journal_get_image_list(id_message)
+    history_list = []
+    for image in history_list_image:
+        file_name = image.get("file_name").split('/')[-1]
+        history_list.append(f'Image: <b>{file_name}</b> '
+                            f'sending:<b> {bool(image.get("file_send"))}</b>')
+    text_history_list = "\n".join(history_list)
+    await callback_query.message.answer_photo(FSInputFile(path_collage),
+                                              caption=text_history_list,
+                                              reply_markup=keyboard)
     remove_img(path_collage)
 
 

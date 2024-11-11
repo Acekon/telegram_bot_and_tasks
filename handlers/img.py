@@ -18,10 +18,13 @@ def get_collage(mess_id, type_collage=None):
     try:
         files_name = img_journal_get_image_list(str(mess_id))
         if files_name:
+            images = []
+            for file in files_name:
+                images.append(file.get('file_name'))
             if type_collage == 'vertical':
-                collage_path = create_vertical_collage(files_name)
+                collage_path = create_vertical_collage(images)
                 return collage_path
-            collage_path = create_image_collage(files_name)
+            collage_path = create_image_collage(images)
             return collage_path
     except FileNotFoundError:
         logger.error(f"FileNotFoundError: please create {full_path_img_dir} dir")
@@ -253,6 +256,7 @@ def img_journal_is_send_json_file(json_file_mess_id, image_name):
 def img_journal_get_image_list(json_file_mess_id):
     file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
     full_path_image_list = []
+    image_data = {'file_name': '', 'file_send': ''}
     if not os.path.isfile(file_path):
         logger.error(f"File not found: ({file_path})")
         return False
@@ -262,9 +266,10 @@ def img_journal_get_image_list(json_file_mess_id):
             path = os.path.join(full_path_img_dir, image.get('file_name'))
             if not os.path.isfile(path):
                 logger.error(f"Image not found: ({path})")
-
-            full_path_image_list.append(path)
-    
+            image_data['file_name'] = path
+            image_data['file_send'] = image.get('file_send')
+            full_path_image_list.append(image_data)
+            image_data = {}
     return full_path_image_list
 
 
