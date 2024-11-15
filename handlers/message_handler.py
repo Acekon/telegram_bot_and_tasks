@@ -136,6 +136,7 @@ async def command_edit_image_list(callback_query: CallbackQuery):
     kb = []
     for img_name in images_name:
         kb.append([types.InlineKeyboardButton(text=f"Remove: {img_name} ?", callback_data=f'remove_img:{img_name}')])
+    kb.append([types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')])
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     history_list_image = img_journal_get_image_list(id_message)
     history_list = []

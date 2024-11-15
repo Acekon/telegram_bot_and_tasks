@@ -19,7 +19,7 @@ def auth_admin(func):
             else:
                 user_command = message.text
         else:
-            user_command = f'Not support message type loging: {type(message)}'
+            user_command = f'Not support message type logging: {type(message)}'
         logger.debug(f'user:{user_id};command:{user_command}')
         if user_id not in [admin[0] for admin in admins_id]:
             logger.error(f'NOT PERMISSION: '

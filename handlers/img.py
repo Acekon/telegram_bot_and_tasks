@@ -3,6 +3,7 @@ import json
 import os
 import random
 import string
+from typing import Tuple
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
@@ -85,7 +86,7 @@ def download_img(file_id, bot_token, mess_id):
     file_path = file_info.json()['result']['file_path']
     response_img = requests.get(f'https://api.telegram.org/file/bot{bot_token}/{file_path}')
     random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(6))
-    with open(f"img/{mess_id}_{random_prefix_file}.png", 'wb', encoding='UTF-8') as f:
+    with open(f"img/{mess_id}_{random_prefix_file}.png", 'wb') as f:
         f.write(response_img.content)
         img_journal_append_json_file(json_file_mess_id=mess_id, new_image_name=f"{mess_id}_{random_prefix_file}.png")
     return f"File {mess_id}_{random_prefix_file}.png is uploads"
@@ -142,7 +143,7 @@ def img_journal_remove_img_json_file(json_file_mess_id):
         logger.error(e.strerror)
 
 
-def img_journal_create_json_file(images: tuple[str, list]):
+def img_journal_create_json_file(images: Tuple[str, list]):
     """Create json file to list images"""
     file_data = {}
     result_files_list = []
@@ -158,7 +159,7 @@ def img_journal_create_json_file(images: tuple[str, list]):
         file.close()
 
 
-def img_journal_generate_json_file(mess_id: str | int):
+def img_journal_generate_json_file(mess_id):
     """Find all images for message_id in folder"""
     files_name = []
     images_list = {}
@@ -204,7 +205,7 @@ def img_journal_append_json_file(json_file_mess_id, new_image_name):
         file.close()
 
 
-def img_journal_pop_json_file(json_file_mess_id: str | int, pop_image_name):
+def img_journal_pop_json_file(json_file_mess_id, pop_image_name):
     """Pop images from json file"""
     logger.info(f'Try to pop image ({pop_image_name}) from json ({json_file_mess_id})')
     file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
