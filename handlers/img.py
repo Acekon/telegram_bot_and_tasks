@@ -85,7 +85,7 @@ def download_img(file_id, bot_token, mess_id):
     file_path = file_info.json()['result']['file_path']
     response_img = requests.get(f'https://api.telegram.org/file/bot{bot_token}/{file_path}')
     random_prefix_file = ''.join(random.choice(string.ascii_letters) for _ in range(6))
-    with open(f"img/{mess_id}_{random_prefix_file}.png", 'wb') as f:
+    with open(f"img/{mess_id}_{random_prefix_file}.png", 'wb', encoding='UTF-8') as f:
         f.write(response_img.content)
         img_journal_append_json_file(json_file_mess_id=mess_id, new_image_name=f"{mess_id}_{random_prefix_file}.png")
     return f"File {mess_id}_{random_prefix_file}.png is uploads"
@@ -153,7 +153,7 @@ def img_journal_create_json_file(images: tuple[str, list]):
         file_data['file_send'] = 0
         result_files_list.append(file_data)
         file_data = {}
-    with open(file_path, 'w') as file:
+    with open(file_path, 'w', encoding='UTF-8') as file:
         json.dump({images[0]: result_files_list}, file)
         file.close()
 
@@ -192,13 +192,13 @@ def img_journal_append_json_file(json_file_mess_id, new_image_name):
     file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
     if not os.path.isfile(file_path):
         return False
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='UTF-8') as file:
         dict_file = {'file_name': new_image_name, 'file_send': 0}
         images_list = json.load(file)
         image_id = list(images_list.keys())[0]
         new_image_list = images_list.get(image_id)
         new_image_list.append(dict_file)
-    with open(file_path, 'w') as file:
+    with open(file_path, 'w', encoding='UTF-8') as file:
         images_list[image_id] = new_image_list
         json.dump(images_list, file)
         file.close()
@@ -211,7 +211,7 @@ def img_journal_pop_json_file(json_file_mess_id: str | int, pop_image_name):
     if not os.path.isfile(file_path):
         logger.error(f"File not found: ({file_path})")
         return False
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='UTF-8') as file:
         new_image_list = []
         images_list = json.load(file)
         image_id = list(images_list.keys())[0]
@@ -223,7 +223,7 @@ def img_journal_pop_json_file(json_file_mess_id: str | int, pop_image_name):
         logger.info(f'Image popped from json ({pop_image_name})')
     else:
         logger.info(f'Image not popped from json ({pop_image_name})')
-    with open(file_path, 'w') as file:
+    with open(file_path, 'w', encoding='UTF-8') as file:
         images_list[image_id] = new_image_list
         json.dump(images_list, file)
         file.close()
@@ -232,13 +232,13 @@ def img_journal_pop_json_file(json_file_mess_id: str | int, pop_image_name):
 def img_journal_is_send_json_file(json_file_mess_id, image_name):
     """Marked is send image on json file"""
     file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
-    if json_file_mess_id.split('.')[0] != image_name.split('_')[0]:
+    if str(json_file_mess_id).split('.')[0] != image_name.split('_')[0]:
         logger.error(f"File ({json_file_mess_id}) not equal to image ({image_name})")
         return False
     if not os.path.isfile(file_path):
         logger.error(f"File not found: ({file_path})")
         return False
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='UTF-8') as file:
         new_image_list = []
         images_list = json.load(file)
         image_id = list(images_list.keys())[0]
@@ -247,7 +247,7 @@ def img_journal_is_send_json_file(json_file_mess_id, image_name):
             if image_name == image['file_name']:
                 image['file_send'] = 1
             new_image_list.append(image)
-        with open(file_path, 'w') as file_write:
+        with open(file_path, 'w', encoding='UTF-8') as file_write:
             images_list[image_id] = new_image_list
             json.dump(images_list, file_write)
             file_write.close()
@@ -260,7 +260,7 @@ def img_journal_get_image_list(json_file_mess_id):
     if not os.path.isfile(file_path):
         logger.error(f"File not found: ({file_path})")
         return False
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='UTF-8') as file:
         images_list = json.load(file)
         for image in images_list.get(str(json_file_mess_id)):
             path = os.path.join(full_path_img_dir, image.get('file_name'))
