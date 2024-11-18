@@ -9,8 +9,10 @@ from aiogram.filters.command import Command
 
 from handlers.db import search_mess, get_message_id, add_message, remove_message, message_enable, message_disable, \
     message_update_text
-from handlers.img import get_collage, download_img, remove_img, remove_all_img
+from handlers.img import get_collage, download_img, remove_img, remove_all_img, img_journal_create_json_file, \
+    img_journal_get_image_list
 from conf import bot_token
+from handlers.logger_setup import logger
 from handlers.service import auth_admin
 
 router = Router()
@@ -38,7 +40,7 @@ class FormReplaceMess(StatesGroup):
     state = State()
 
 
-@router.message(Command(commands=['search']))
+@router.message(Command(commands=['search']))  # todo in v0.4.1, need refactor return message
 @auth_admin
 async def command_get_search(message: Message, state: FSMContext):
     await state.set_state(FormSearchText.mess_search_text)
@@ -73,20 +75,26 @@ async def process_mess_get(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     message_text = get_message_id(message.text)
     if not message_text:
+        logger.error(f"Err: Not found ID message")
         return await message.answer(f"Not found ID message")
     path_collage = get_collage(message.text)
+    kb = []
     if bool(int(message_text[2])):
         state_bottoms = types.InlineKeyboardButton(text="⛔ Disable", callback_data=f'mess_disable:{message.text}')
     else:
         state_bottoms = types.InlineKeyboardButton(text="✅ Enable", callback_data=f'mess_enable:{message.text}')
-    kb = [
-        [types.InlineKeyboardButton(text="Remove message", callback_data=f'remove_mess_img:{message.text}'),
-         types.InlineKeyboardButton(text="Remove all Img", callback_data=f'remove_all_img:{message.text}'),
-         types.InlineKeyboardButton(text="Edit image list", callback_data=f'edit_image_list:{message.text}')],
-        [state_bottoms,
-         types.InlineKeyboardButton(text="Replace message", callback_data=f'mess_replace:{message.text}')],
-        [types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')],
-    ]
+    kb_line_one = [types.InlineKeyboardButton(text="Remove message", callback_data=f'remove_mess_img:{message.text}')]
+    if path_collage:
+        kb_line_one.append(types.InlineKeyboardButton(text="Edit image list",
+                                                      callback_data=f'edit_image_list:{message.text}'))
+    kb_line_two = [state_bottoms,
+                   types.InlineKeyboardButton(text="Replace message",
+                                              callback_data=f'mess_replace:{message.text}')]
+    kb_line_three = [types.InlineKeyboardButton(text="Cancel",
+                                                callback_data=f'clear_keyboard')]
+    kb.append(kb_line_one)
+    kb.append(kb_line_two)
+    kb.append(kb_line_three)
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     mess_text = (f"ID: {message_text[0]} Enable: {bool(int(message_text[2]))}\n"
                  f"Text:\n<code>{message_text[1]}</code>")
@@ -113,6 +121,7 @@ async def command_remove_message_img(callback_query: CallbackQuery):
     files_name = remove_all_img(id_message)
     mess = remove_message(id_message)
     if not mess:
+        logger.error(f"Message not found")
         mess = 'Message not found'
     else:
         mess = 'Message removed'
@@ -127,8 +136,18 @@ async def command_edit_image_list(callback_query: CallbackQuery):
     kb = []
     for img_name in images_name:
         kb.append([types.InlineKeyboardButton(text=f"Remove: {img_name} ?", callback_data=f'remove_img:{img_name}')])
+    kb.append([types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')])
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
-    await callback_query.message.answer_photo(FSInputFile(path_collage), reply_markup=keyboard)
+    history_list_image = img_journal_get_image_list(id_message)
+    history_list = []
+    for image in history_list_image:
+        file_name = image.get("file_name").split('/')[-1]
+        history_list.append(f'Image: <b>{file_name}</b> '
+                            f'sending:<b> {bool(image.get("file_send"))}</b>')
+    text_history_list = "\n".join(history_list)
+    await callback_query.message.answer_photo(FSInputFile(path_collage),
+                                              caption=text_history_list,
+                                              reply_markup=keyboard)
     remove_img(path_collage)
 
 
@@ -179,6 +198,7 @@ async def process_mess_replace(message: Message, state: FSMContext):
     if message_flag:
         await message.answer('Replace')
     else:
+        logger.error(f"Err Replace")
         await message.answer('Error')
     return await state.clear()
 
@@ -195,6 +215,7 @@ async def command_add_message(message: Message, state: FSMContext):
 async def process_mess_add(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     message_text = add_message(message.text)
+    img_journal_create_json_file(images=(f'{message_text.split("=")[-1].strip()}', []))
     await message.answer(message_text)
     return await state.clear()
 
@@ -202,6 +223,7 @@ async def process_mess_add(message: Message, state: FSMContext):
 @router.message(Command(commands=['upload']))
 @auth_admin
 async def command_upload_image(message: Message, state: FSMContext):
+    FormGetIdImg.mess_text = None
     await state.set_state(FormGetIdImg.mess_id)
     await message.answer(f"Upload file and Enter ID message:")
 
@@ -217,6 +239,7 @@ async def process_mess_add_img(message: Message, state: FSMContext):
         result = download_img(bot_token=bot_token, file_id=file_id, mess_id=FormGetIdImg.mess_text)
         await message.answer(f"{result}")
     else:
+        logger.error(f"Err: You not enter ID message")
         await message.answer("⚠ You not enter ID message")
     return await state.clear()
 

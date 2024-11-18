@@ -5,23 +5,31 @@ import random
 import sqlite3
 import sys
 import time
+
 import requests
 import schedule
+import fnmatch
 from conf import bot_token, db_path, start_times
 from handlers.db import get_sendto, mess_reset, get_admins_list
+from handlers.img import img_journal_get_image_list, img_journal_is_send_json_file, img_journal_generate_json_file
+from handlers.logger_setup import logger
 
 
 def send_photo(file_path, caption, send_to):
     with open(file_path, 'rb') as img_file:
+        logger.info(f'Try sending photo')
         img = {'photo': ('_', img_file, 'image/jpeg')}
         url = f'https://api.telegram.org/bot{bot_token}/sendPhoto?chat_id={send_to}&caption={caption}'
         response = requests.post(url, files=img)
+        logger.info(response.json())
         return response.text
 
 
 def send_text(message_text, send_to):
+    logger.info(f'Try sending text')
     url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
     response = requests.post(url, json={'chat_id': send_to, 'parse_mode': 'html', 'text': message_text})
+    logger.info(response.json())
     return response.text
 
 
@@ -42,7 +50,7 @@ def send_random_message():
     message_id, text, last_sent = message_db
     img_mess = open_random_image(message_id)
     if img_mess:
-        send_photo(file_path=os.path.join(os.getcwd(), img_mess), caption=text, send_to=channel_id)
+        send_photo(file_path=img_mess, caption=text, send_to=channel_id)
     else:
         send_text(text, send_to=channel_id)
     c.execute('UPDATE messages SET last_send=? WHERE ids=?',
@@ -52,29 +60,28 @@ def send_random_message():
 
 
 def open_random_image(message_id):
-    img_files = []
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    source_dir = os.path.join(script_dir, 'img\\')
-    for path, dirs, files in os.walk(source_dir):
-        for filename in files:
-            fullpath = os.path.join(path, filename)
-            try:
-                if int(filename.split('_')[0]) == message_id:
-                    img_files.append(fullpath)
-                else:
-                    if len(img_files) >= 1:
-                        break
-                    continue
-            except ValueError:
-                continue
-    if len(img_files) != 0:
+    img_files = img_journal_get_image_list(message_id)
+    not_send_images = []
+    send_images = []
+    if img_files:
+        for image in img_files:
+            if image.get('file_send') == 0:
+                not_send_images.append(image)
+            if image.get('file_send') == 1:
+                send_images.append(image)
+        if not_send_images == send_images:
+            return False
+        images = not_send_images
+        if len(images) == 0:
+            img_journal_generate_json_file(message_id)
+            images = send_images
         tmp_random_image = []
         for _ in range(10):
-            tmp_random_image.append(random.randrange(0, len(img_files)))
-        img = img_files[tmp_random_image[random.randrange(0, 8)]]
-        return img
-    else:
-        return False
+            tmp_random_image.append(random.randrange(0, len(images)))
+        img = images[tmp_random_image[random.randrange(0, 8)]]
+        img_journal_is_send_json_file(message_id, img.get('file_name').split('/')[-1])
+        return img.get('file_name')
+    return False
 
 
 def main_run():

@@ -1,6 +1,7 @@
 import sqlite3
 
 from conf import db_path
+from handlers.logger_setup import logger
 
 
 def check_last_sent_status():
@@ -25,6 +26,7 @@ def mess_reset():
         conn.close()
         return f'History sending messages is reset, new iteration started.'
     except sqlite3.OperationalError as err:
+        logger.error(f"Not reset! Error: {err}")
         return f"Not reset! Error: {err}"
 
 
@@ -37,9 +39,11 @@ def search_mess(mess_text):
         conn.commit()
         conn.close()
         if not messages:
+            logger.error(f"Not found")
             return ["Not found"]
         return messages
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return [f"Error: {err}"]
 
 
@@ -55,6 +59,7 @@ def get_message_id(mess_id):
             return None
         return mess
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"
 
 
@@ -62,9 +67,7 @@ def add_message(text_message):
     try:
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        print(text_message)
         text_message = text_message.replace("'", '`')
-        print(text_message)
         c.execute(
             f"INSERT INTO messages (text_message, enable) VALUES ('{text_message}', '1')")
         conn.commit()
@@ -74,6 +77,7 @@ def add_message(text_message):
         conn.close()
         return f"Saved! last ID= {lats_sent[0]}"
     except sqlite3.OperationalError as err:
+        logger.error(f"Not Save! Error: {err}")
         return f"Not Save! Error: {err}"
 
 
@@ -89,6 +93,7 @@ def remove_message(id_mess):
         else:
             return False
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"
 
 
@@ -105,6 +110,7 @@ def get_admins_list():
             res_admins.append([int(adm[0]), adm[1]])
         return res_admins
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"
 
 
@@ -117,6 +123,7 @@ def add_admin_list(admin_id, description):
         conn.close()
         return True
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"
 
 
@@ -130,8 +137,10 @@ def remove_admin_list(admin_id):
         if count != 0:
             return True
         else:
+            logger.error(f"Not Save! Error: {admin_id}")
             return False
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"
 
 
@@ -154,6 +163,7 @@ def create_all_table():
         conn.commit()
         conn.close()
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"
 
 
@@ -162,14 +172,15 @@ def get_sendto():
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
         send_to = c.execute(f'SELECT value, description FROM settings WHERE name = "send_to"')
-
         conn.commit()
         send_to = send_to.fetchone()
         if not send_to:
+            logger.error(f"Not Save! Error: {send_to}")
             return False
         conn.close()
         return send_to
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"
 
 
@@ -182,6 +193,7 @@ def add_sendto(chanel_id, description):
         conn.close()
         return True
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"
 
 
@@ -197,6 +209,7 @@ def remove_sendto():
         else:
             return False
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"
 
 
@@ -210,8 +223,10 @@ def message_disable(message_id):
         if count != 0:
             return True
         else:
+            logger.error(f"Not Save! Error: {message_id}")
             return False
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"
 
 
@@ -225,8 +240,10 @@ def message_enable(message_id):
         if count != 0:
             return True
         else:
+            logger.error(f"Not Save! Error: {message_id}")
             return False
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"
 
 
@@ -243,6 +260,8 @@ def message_update_text(message_id, mess_text: str):
         if count != 0:
             return True
         else:
+            logger.error(f"Not Save! Error: {message_id}")
             return False
     except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
         return f"Error: {err}"

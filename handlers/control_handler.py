@@ -9,6 +9,8 @@ from aiogram.filters.command import Command, CommandStart
 from conf import start_times
 from handlers.db import check_last_sent_status, mess_reset, get_admins_list, remove_admin_list, add_admin_list, \
     get_sendto, add_sendto, remove_sendto
+from handlers.img import img_journal_regenerate_all_json_file
+from handlers.logger_setup import logger
 from handlers.service import auth_admin
 
 router = Router()
@@ -133,6 +135,7 @@ async def command_control(message: Message):
         [types.InlineKeyboardButton(text="Control admins", callback_data=f'control_admins')],
         [types.InlineKeyboardButton(text="Reset sending message", callback_data=f'reset')],
         [types.InlineKeyboardButton(text="Edit which chat to send to", callback_data=f'sendto_main')],
+        [types.InlineKeyboardButton(text="🔴 Reset all history send", callback_data=f'history_reset')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     sendto = get_sendto()
@@ -140,7 +143,13 @@ async def command_control(message: Message):
         send_to_text = sendto[0]
     else:
         send_to_text = '-'
-    return await message.answer(f"Control bots settings\nStart times: {start_times}\nSent to: {send_to_text}",
+    return await message.answer(f"Control bots settings\n"
+                                f"1. Change administrators\n"
+                                f"2. Resetting the message sending history (new message sending cycle)\n"
+                                f"3. Change chat ID for sending messages\n"
+                                f"4. Reset history all images\n"
+                                f"Start times:<code> {start_times}</code>\n"
+                                f"Sent to:<code> {send_to_text}</code>",
                                 reply_markup=keyboard)
 
 
@@ -175,6 +184,7 @@ async def process_remove_admins(callback_query: CallbackQuery):
     if remove_admin_list(callback_query.data.split(':')[-1]):
         return await callback_query.answer(f"Removed admin: {callback_query.data.split(':')[-1]}")
     else:
+        logger.error(f"Err remove: {callback_query.data.split(':')[-1]}")
         return await callback_query.answer(f"Err remove: {callback_query.data.split(':')[-1]}")
 
 
@@ -198,7 +208,8 @@ async def process_mess_search(message: Message, state: FSMContext):
         else:
             await message.answer(f'Err: {admin_id}, {description}\n {result}')
     except ValueError:
-        await message.answer('Err: required\n<b>12345678,NameAdmin</b>')
+        logger.error(f"ValueError: required\n<b>12345678,NameAdmin</b>")
+        await message.answer('ValueError: required\n<b>12345678,NameAdmin</b>')
     return await state.clear()
 
 
@@ -242,6 +253,7 @@ async def process_sendto_add(message: Message, state: FSMContext):
         else:
             await message.answer(f'Err: {chanel_id}, {description}\n {result}')
     except ValueError:
+        logger.error(f"ValueError:  required\n<b>-123456789987456321,ChanelName</b>")
         await message.answer('Err: required\n<b>-123456789987456321,ChanelName</b>')
     return await state.clear()
 
@@ -256,3 +268,25 @@ async def process_remove_sendto(callback_query: CallbackQuery):
         return await callback_query.answer(f"Removed sendto Chanel ID")
     else:
         return await callback_query.answer(f"Err remove")
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('history_reset'))
+@auth_admin
+async def process_journal_json_reset_admins(callback_query: CallbackQuery):
+    kb = [
+        [types.InlineKeyboardButton(text="🔴 Yes", callback_data=f'yes_history_reset')],
+        [types.InlineKeyboardButton(text="🟢 No", callback_data=f'clear_keyboard')],
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    await callback_query.message.edit_text(reply_markup=keyboard,
+                                           text="You start clear all history sending all messages")
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('yes_history_reset'))
+@auth_admin
+async def process_journal_json_reset_admins(callback_query: CallbackQuery):
+    kb = []
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    img_journal_regenerate_all_json_file()
+    await callback_query.message.edit_text(reply_markup=keyboard,
+                                           text="History is reset")
