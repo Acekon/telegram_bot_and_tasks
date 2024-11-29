@@ -40,7 +40,7 @@ class FormReplaceMess(StatesGroup):
     state = State()
 
 
-@router.message(Command(commands=['search']))  # todo in v0.4.1, need refactor return message
+@router.message(Command(commands=['search']))
 @auth_admin
 async def command_get_search(message: Message, state: FSMContext):
     await state.set_state(FormSearchText.mess_search_text)
@@ -51,7 +51,6 @@ async def command_get_search(message: Message, state: FSMContext):
 @auth_admin
 async def process_mess_search(message: Message, state: FSMContext) -> None:
     await state.update_data(name=message.text)
-
     messages = search_mess(message.text)
     if len(messages) <= 10:
         for mess in messages:
