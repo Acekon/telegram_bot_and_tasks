@@ -4,7 +4,7 @@ from conf import db_path
 from handlers.logger_setup import logger
 
 
-def check_last_sent_status():
+def check_last_sent_status() -> tuple:
     conn = sqlite3.connect(db_path())
     c = conn.cursor()
     c.execute(f'SELECT COUNT(ids) as total,'
@@ -17,7 +17,7 @@ def check_last_sent_status():
     return lats_sent
 
 
-def mess_reset():
+def mess_reset() -> str:
     try:
         conn = sqlite3.connect(db_path())
         c = conn.cursor()

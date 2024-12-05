@@ -143,7 +143,7 @@ def img_journal_remove_img_json_file(json_file_mess_id):
         logger.error(e.strerror)
 
 
-def img_journal_create_json_file(images: Tuple[str, list]):
+def img_journal_create_json_file(images: Tuple[str, list]) -> None:
     """Create json file to list images"""
     file_data = {}
     result_files_list = []
@@ -154,9 +154,9 @@ def img_journal_create_json_file(images: Tuple[str, list]):
         file_data['file_send'] = 0
         result_files_list.append(file_data)
         file_data = {}
-    with open(file_path, 'w', encoding='UTF-8') as file:
-        json.dump({images[0]: result_files_list}, file)
-        file.close()
+    json_data = {images[0]: result_files_list}
+    with open(file_path, 'w', encoding='UTF-8') as json_file:
+        json_file.write(json.dumps(json_data))
 
 
 def img_journal_generate_json_file(mess_id):
@@ -199,10 +199,10 @@ def img_journal_append_json_file(json_file_mess_id, new_image_name):
         image_id = list(images_list.keys())[0]
         new_image_list = images_list.get(image_id)
         new_image_list.append(dict_file)
+    images_list[image_id] = new_image_list
+    json_data = json.dumps(images_list)
     with open(file_path, 'w', encoding='UTF-8') as file:
-        images_list[image_id] = new_image_list
-        json.dump(images_list, file)
-        file.close()
+        file.write(json_data)
 
 
 def img_journal_pop_json_file(json_file_mess_id, pop_image_name):
@@ -224,10 +224,10 @@ def img_journal_pop_json_file(json_file_mess_id, pop_image_name):
         logger.info(f'Image popped from json ({pop_image_name})')
     else:
         logger.info(f'Image not popped from json ({pop_image_name})')
+    images_list[image_id] = new_image_list
+    json_data = json.dumps(images_list)
     with open(file_path, 'w', encoding='UTF-8') as file:
-        images_list[image_id] = new_image_list
-        json.dump(images_list, file)
-        file.close()
+        file.write(json_data)
 
 
 def img_journal_is_send_json_file(json_file_mess_id, image_name):
@@ -251,10 +251,10 @@ def img_journal_is_send_json_file(json_file_mess_id, image_name):
                 else:
                     image['file_send'] = 0
             new_image_list.append(image)
-        with open(file_path, 'w', encoding='UTF-8') as file_write:
-            images_list[image_id] = new_image_list
-            json.dump(images_list, file_write)
-            file_write.close()
+    images_list[image_id] = new_image_list
+    json_data = json.dumps(images_list)
+    with open(file_path, 'w', encoding='UTF-8') as file:
+        file.write(json_data)
 
 
 def img_journal_get_image_list(json_file_mess_id):
