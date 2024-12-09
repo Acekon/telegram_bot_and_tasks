@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, FSInputFile, InlineKeyboardMarkup, CallbackQuery
 from aiogram.filters.command import Command
 
+from ai_mess_task import send_manual_message
 from handlers.db import search_mess, get_message_id, add_message, remove_message, message_enable, message_disable, \
     message_update_text
 from handlers.img import get_collage, download_img, remove_img, remove_all_img, img_journal_create_json_file, \
@@ -70,7 +71,7 @@ async def command_get_id(message: Message, state: FSMContext):
 
 @router.message(FormGetId.mess_id)
 @auth_admin
-async def process_mess_get(message: Message, state: FSMContext):  # todo in v0.4.1, add manual send
+async def process_mess_get(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     message_text = get_message_id(message.text)
     if not message_text:
@@ -89,11 +90,14 @@ async def process_mess_get(message: Message, state: FSMContext):  # todo in v0.4
     kb_line_two = [state_bottoms,
                    types.InlineKeyboardButton(text="Replace message",
                                               callback_data=f'mess_replace:{message.text}')]
-    kb_line_three = [types.InlineKeyboardButton(text="Cancel",
-                                                callback_data=f'clear_keyboard')]
+    kb_line_three = [types.InlineKeyboardButton(text="Send message now",
+                                                callback_data=f'send_now:{message.text}')]
+    kb_line_four = [types.InlineKeyboardButton(text="Cancel",
+                                               callback_data=f'clear_keyboard')]
     kb.append(kb_line_one)
     kb.append(kb_line_two)
     kb.append(kb_line_three)
+    kb.append(kb_line_four)
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     mess_text = (f"ID: {message_text[0]} Enable: {bool(int(message_text[2]))}\n"
                  f"Text:\n<code>{message_text[1]}</code>")
@@ -103,6 +107,13 @@ async def process_mess_get(message: Message, state: FSMContext):  # todo in v0.4
     else:
         await message.answer(mess_text, reply_markup=keyboard)
     return await state.clear()
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('send_now:'))
+@auth_admin
+async def command_send_now(callback_query: CallbackQuery):
+    message_id = callback_query.data.split(':')[-1]
+    send_manual_message(message_id)
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('remove_all_img:'))

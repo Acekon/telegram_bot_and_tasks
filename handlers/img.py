@@ -207,7 +207,7 @@ def img_journal_append_json_file(json_file_mess_id, new_image_name):
 
 def img_journal_pop_json_file(json_file_mess_id, pop_image_name):
     """Pop images from json file"""
-    logger.info(f'Try to pop image ({pop_image_name}) from json ({json_file_mess_id})')
+    logger.info(f'Try to pop image ({pop_image_name}) from json ({json_file_mess_id}.json)')
     file_path = os.path.join(full_path_img_dir, f"{json_file_mess_id}.json")
     if not os.path.isfile(file_path):
         logger.error(f"File not found: ({file_path})")
