@@ -7,10 +7,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, FSInputFile, InlineKeyboardMarkup, CallbackQuery
 from aiogram.filters.command import Command
 
+from ai_mess_task import send_manual_message
 from handlers.db import search_mess, get_message_id, add_message, remove_message, message_enable, message_disable, \
     message_update_text
 from handlers.img import get_collage, download_img, remove_img, remove_all_img, img_journal_create_json_file, \
-    img_journal_get_image_list
+    img_journal_get_image_list, img_journal_is_send_json_file
 from conf import bot_token
 from handlers.logger_setup import logger
 from handlers.service import auth_admin
@@ -40,7 +41,7 @@ class FormReplaceMess(StatesGroup):
     state = State()
 
 
-@router.message(Command(commands=['search']))  # todo in v0.4.1, need refactor return message
+@router.message(Command(commands=['search']))
 @auth_admin
 async def command_get_search(message: Message, state: FSMContext):
     await state.set_state(FormSearchText.mess_search_text)
@@ -51,7 +52,6 @@ async def command_get_search(message: Message, state: FSMContext):
 @auth_admin
 async def process_mess_search(message: Message, state: FSMContext) -> None:
     await state.update_data(name=message.text)
-
     messages = search_mess(message.text)
     if len(messages) <= 10:
         for mess in messages:
@@ -90,11 +90,14 @@ async def process_mess_get(message: Message, state: FSMContext):
     kb_line_two = [state_bottoms,
                    types.InlineKeyboardButton(text="Replace message",
                                               callback_data=f'mess_replace:{message.text}')]
-    kb_line_three = [types.InlineKeyboardButton(text="Cancel",
-                                                callback_data=f'clear_keyboard')]
+    kb_line_three = [types.InlineKeyboardButton(text="Send message now",
+                                                callback_data=f'send_now:{message.text}')]
+    kb_line_four = [types.InlineKeyboardButton(text="Cancel",
+                                               callback_data=f'clear_keyboard')]
     kb.append(kb_line_one)
     kb.append(kb_line_two)
     kb.append(kb_line_three)
+    kb.append(kb_line_four)
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     mess_text = (f"ID: {message_text[0]} Enable: {bool(int(message_text[2]))}\n"
                  f"Text:\n<code>{message_text[1]}</code>")
@@ -104,6 +107,13 @@ async def process_mess_get(message: Message, state: FSMContext):
     else:
         await message.answer(mess_text, reply_markup=keyboard)
     return await state.clear()
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('send_now:'))
+@auth_admin
+async def command_send_now(callback_query: CallbackQuery):
+    message_id = callback_query.data.split(':')[-1]
+    send_manual_message(message_id)
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('remove_all_img:'))
@@ -132,19 +142,25 @@ async def command_remove_message_img(callback_query: CallbackQuery):
 @auth_admin
 async def command_edit_image_list(callback_query: CallbackQuery):
     id_message = callback_query.data.split(':')[-1]
-    path_collage, images_name = get_collage(id_message, type_collage='vertical')
+    path_collage = get_collage(id_message, type_collage='vertical')
     kb = []
-    for img_name in images_name:
-        kb.append([types.InlineKeyboardButton(text=f"Remove: {img_name} ?", callback_data=f'remove_img:{img_name}')])
-    kb.append([types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')])
-    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     history_list_image = img_journal_get_image_list(id_message)
     history_list = []
     for image in history_list_image:
+        image_name = image.get('file_name').split('/')[-1]
+        file_send = image.get('file_send')
+        kb.append([
+            types.InlineKeyboardButton(text=f"Remove: {image_name}",
+                                       callback_data=f"remove_img:{image_name}"),
+            types.InlineKeyboardButton(text=f"State is send: {bool(file_send)}",
+                                       callback_data=f"send_state_img:{image_name}")
+        ])
         file_name = image.get("file_name").split('/')[-1]
         history_list.append(f'Image: <b>{file_name}</b> '
                             f'sending:<b> {bool(image.get("file_send"))}</b>')
     text_history_list = "\n".join(history_list)
+    kb.append([types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')])
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     await callback_query.message.answer_photo(FSInputFile(path_collage),
                                               caption=text_history_list,
                                               reply_markup=keyboard)
@@ -158,6 +174,16 @@ async def command_remove_img(callback_query: CallbackQuery):
     remove_img(img_name=img_name, img_path=None)
     await callback_query.answer(text=f'Removed {img_name}')
     await callback_query.message.delete()
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('send_state_img:'))
+@auth_admin
+async def command_remove_img(callback_query: CallbackQuery):
+    img_name = callback_query.data.split(':')[-1]
+    img_journal_is_send_json_file(img_name.split('_')[0], img_name)
+    await callback_query.answer(text=f'Change state is send {img_name}')
+    await callback_query.message.delete()
+    await callback_query.message.answer(text=f'Change state is send {img_name}')
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('mess_enable:'))

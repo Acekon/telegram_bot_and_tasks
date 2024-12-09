@@ -1,6 +1,5 @@
 import datetime
 import logging
-import os
 import random
 import sqlite3
 import sys
@@ -8,7 +7,6 @@ import time
 
 import requests
 import schedule
-import fnmatch
 from conf import bot_token, db_path, start_times
 from handlers.db import get_sendto, mess_reset, get_admins_list
 from handlers.img import img_journal_get_image_list, img_journal_is_send_json_file, img_journal_generate_json_file
@@ -49,14 +47,30 @@ def send_random_message():
     message_db = messages_db[random.randint(0, len(messages_db) - 1)]
     message_id, text, last_sent = message_db
     img_mess = open_random_image(message_id)
-    if img_mess:
-        send_photo(file_path=img_mess, caption=text, send_to=channel_id)
-    else:
-        send_text(text, send_to=channel_id)
+    send_message(message_text=text, img_path=img_mess, channel_id=channel_id)
     c.execute('UPDATE messages SET last_send=? WHERE ids=?',
               (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), message_id))
     conn.commit()
     conn.close()
+
+
+def send_manual_message(message_id):
+    channel_id = get_sendto()[0]
+    conn = sqlite3.connect(db_path())
+    c = conn.cursor()
+    sql_query= f'SELECT text_message FROM messages WHERE ids ={message_id}'
+    print(sql_query)
+    c.execute(sql_query)
+    messages_db = c.fetchone()
+    img_mess = open_random_image(message_id)
+    send_message(message_text=messages_db[0], img_path=img_mess, channel_id=channel_id)
+
+
+def send_message(message_text, img_path, channel_id):
+    if img_path:
+        send_photo(file_path=img_path, caption=message_text, send_to=channel_id)
+    else:
+        send_text(message_text, send_to=channel_id)
 
 
 def open_random_image(message_id):
