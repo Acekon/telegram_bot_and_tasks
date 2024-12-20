@@ -1,4 +1,4 @@
-# Telegram Message Bot - v0.4.1
+# Telegram Message Bot - v0.4.2
 
 This repository contains a Telegram bot script that allows you to send messages and images to a chat at specified
 intervals using the Telegram Bot API. The bot is built using Python and utilizes the Aiogram library.
@@ -40,7 +40,7 @@ intervals using the Telegram Bot API. The bot is built using Python and utilizes
 
     ```python
     # conf.py
-    start_times = ['09:00', '12:00', '15:00']  # Add the times you want the bot to send messages
+
     db_path = 'my_database.db'  # Set the path to your SQLite database
     bot_token = 'YOUR_TELEGRAM_BOT_TOKEN'  # Replace this with your Telegram bot token or create .env file
     ```

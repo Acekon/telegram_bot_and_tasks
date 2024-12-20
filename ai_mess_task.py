@@ -7,8 +7,8 @@ import time
 
 import requests
 import schedule
-from conf import bot_token, db_path, start_times
-from handlers.db import get_sendto, mess_reset, get_admins_list
+from conf import bot_token, db_path
+from handlers.db import get_sendto, mess_reset, get_admins_list, get_start_times
 from handlers.img import img_journal_get_image_list, img_journal_is_send_json_file, img_journal_generate_json_file
 from handlers.logger_setup import logger
 
@@ -99,6 +99,7 @@ def open_random_image(message_id):
 
 
 def main_run():
+    start_times = get_start_times()
     print(f'Task will sending : {start_times}')
     for times in start_times:
         schedule.every().day.at(times).do(send_random_message)

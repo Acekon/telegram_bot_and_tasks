@@ -266,3 +266,23 @@ def message_update_text(message_id, mess_text: str):
     except sqlite3.OperationalError as err:
         logger.error(f"Error: {err}")
         return f"Error: {err}"
+
+
+def get_start_times():
+    try:
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        data = c.execute(f'SELECT value FROM settings WHERE name = "start_times"')
+        conn.commit()
+        db_start_times = data.fetchone()
+        if not db_start_times:
+            logger.error(f"Not Save! Error: {db_start_times}")
+            return False
+        conn.close()
+        start_times = []
+        for start_time in db_start_times[0].split(','):
+            start_times.append(start_time.strip())
+        return start_times
+    except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
+        return f"Error: {err}"
