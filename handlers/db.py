@@ -286,3 +286,25 @@ def get_start_times():
     except sqlite3.OperationalError as err:
         logger.error(f"Error: {err}")
         return f"Error: {err}"
+
+
+def add_start_times(start_time):
+    try:
+        logger.info(f"Try add start time: {start_time}")
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f"Select value FROM settings WHERE name = 'start_times'")
+        data = c.fetchone()
+        start_times = data[0]
+        start_times = f"{start_times},{start_time}"
+        c.execute(f'UPDATE settings SET "value"="{start_times}" WHERE name = "start_times"')
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
+        return f"Error: {err}"
+
+
+if __name__ == '__main__':
+    pass

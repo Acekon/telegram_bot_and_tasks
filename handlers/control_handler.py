@@ -6,9 +6,8 @@ from aiogram.utils.markdown import hbold
 
 from aiogram.filters.command import Command, CommandStart
 
-from conf import start_times
 from handlers.db import check_last_sent_status, mess_reset, get_admins_list, remove_admin_list, add_admin_list, \
-    get_sendto, add_sendto, remove_sendto
+    get_sendto, add_sendto, remove_sendto, get_start_times
 from handlers.img import img_journal_regenerate_all_json_file
 from handlers.logger_setup import logger
 from handlers.service import auth_admin
@@ -135,6 +134,7 @@ async def command_control(message: Message):
         [types.InlineKeyboardButton(text="Control admins", callback_data=f'control_admins')],
         [types.InlineKeyboardButton(text="Reset sending message", callback_data=f'reset')],
         [types.InlineKeyboardButton(text="Edit which chat to send to", callback_data=f'sendto_main')],
+        [types.InlineKeyboardButton(text="Edit start times", callback_data=f'start_times')],
         [types.InlineKeyboardButton(text="🔴 Reset all history send", callback_data=f'history_reset')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
@@ -143,6 +143,7 @@ async def command_control(message: Message):
         send_to_text = sendto[0]
     else:
         send_to_text = '-'
+    start_times = get_start_times()
     return await message.answer(f"Control bots settings\n"
                                 f"1. Change administrators\n"
                                 f"2. Resetting the message sending history (new message sending cycle)\n"
@@ -151,6 +152,14 @@ async def command_control(message: Message):
                                 f"Start times:<code> {start_times}</code>\n"
                                 f"Sent to:<code> {send_to_text}</code>",
                                 reply_markup=keyboard)
+
+
+@router.callback_query(lambda c: c.data == 'clear_keyboard')
+@auth_admin
+async def process_control_admins(callback_query: CallbackQuery):
+    kb = []
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    await callback_query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(lambda c: c.data == 'control_admins')
@@ -165,14 +174,6 @@ async def process_control_admins(callback_query: CallbackQuery):
                types.InlineKeyboardButton(text="Cancel", callback_data='clear_keyboard')])
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     await callback_query.message.edit_text(reply_markup=keyboard, text="List of admins:")
-
-
-@router.callback_query(lambda c: c.data == 'clear_keyboard')
-@auth_admin
-async def process_control_admins(callback_query: CallbackQuery):
-    kb = []
-    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
-    await callback_query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('remove_admin:'))
@@ -290,3 +291,17 @@ async def process_journal_json_reset_admins(callback_query: CallbackQuery):
     img_journal_regenerate_all_json_file()
     await callback_query.message.edit_text(reply_markup=keyboard,
                                            text="History is reset")
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('start_times'))
+@auth_admin
+async def process_start_times(callback_query: CallbackQuery):
+    kb = [
+        [types.InlineKeyboardButton(text="add_start_time", callback_data=f'add_start_time')],
+        [types.InlineKeyboardButton(text="remove_start_time", callback_data=f'remove_start_time')],
+        [types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')],
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    start_times = get_start_times()
+    await callback_query.message.edit_text(reply_markup=keyboard,
+                                           text=f"Control start times\n {start_times}")
