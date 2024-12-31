@@ -7,7 +7,7 @@ from aiogram.utils.markdown import hbold
 from aiogram.filters.command import Command, CommandStart
 
 from handlers.db import check_last_sent_status, mess_reset, get_admins_list, remove_admin_list, add_admin_list, \
-    get_sendto, add_sendto, remove_sendto, get_start_times
+    get_sendto, add_sendto, remove_sendto, get_start_times, add_start_times, remove_start_times
 from handlers.img import img_journal_regenerate_all_json_file
 from handlers.logger_setup import logger
 from handlers.service import auth_admin
@@ -21,6 +21,10 @@ class FormGetNewAdmins(StatesGroup):
 
 class SendToAdd(StatesGroup):
     name_sendto_add = State()
+
+
+class StartTimes(StatesGroup):
+    time = State()
 
 
 @router.message(Command(commands=['status']))
@@ -298,10 +302,61 @@ async def process_journal_json_reset_admins(callback_query: CallbackQuery):
 async def process_start_times(callback_query: CallbackQuery):
     kb = [
         [types.InlineKeyboardButton(text="add_start_time", callback_data=f'add_start_time')],
-        [types.InlineKeyboardButton(text="remove_start_time", callback_data=f'remove_start_time')],
+        [types.InlineKeyboardButton(text="remove_list_start_time", callback_data=f'remove_list_start_time')],
         [types.InlineKeyboardButton(text="Cancel", callback_data=f'clear_keyboard')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     start_times = get_start_times()
     await callback_query.message.edit_text(reply_markup=keyboard,
-                                           text=f"Control start times\n {start_times}")
+                                           text=f"Current list start times\n {start_times}")
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('add_start_time'))
+@auth_admin
+async def process_add_start_time(callback_query: CallbackQuery, state: FSMContext):
+    await state.set_state(StartTimes.time)
+    await callback_query.message.edit_text(text=f'Please enter time (example: 12:00)')
+
+
+@router.message(StartTimes.time)
+@auth_admin
+async def command_mess_search(message: Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    try:
+        time = message.text
+        if len(time.split(':')) == 2 and int(time.split(':')[0]) <= 24 and int(time.split(':')[1]) <= 60:
+            add_start_times(start_time=time)
+            await message.answer(f'Is added: {time}')
+        else:
+            kb = [[types.InlineKeyboardButton(text="add_start_time", callback_data=f'add_start_time')]]
+            keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+            await message.answer(reply_markup=keyboard,
+                                 text=f'ValueError: Is enter not support time <code>{time}</code>\n'
+                                      f'example <b>12:00</b>')
+    except ValueError:
+        await message.answer('ValueError: required\n<b>12:00</b>')
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('remove_list_start_time'))
+@auth_admin
+async def process_remove_start_time(callback_query: CallbackQuery):
+    kb = []
+    start_times = get_start_times()
+    for time in start_times:
+        kb.append([types.InlineKeyboardButton(text=f'❌ {time}',
+                                              callback_data=f'remove_start_time:{time}')])
+    kb.append([types.InlineKeyboardButton(text="Cancel", callback_data='clear_keyboard')])
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    await callback_query.message.edit_text(reply_markup=keyboard, text="List of start times:")
+
+
+@router.callback_query(lambda c: c.data and c.data.startswith('remove_start_time:'))
+@auth_admin
+async def process_remove_start_time(callback_query: CallbackQuery):
+    time = callback_query.data.split(':')
+    if remove_start_times(':'.join(time[1:])):
+        await process_start_times(callback_query)
+        return await callback_query.answer(f"Removed start time: {callback_query.data.split(':')[-1]}")
+    else:
+        logger.error(f"Err remove: {callback_query.data.split(':')[-1]}")
+        return await callback_query.answer(f"Err remove: {callback_query.data.split(':')[-1]}")

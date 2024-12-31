@@ -306,5 +306,30 @@ def add_start_times(start_time):
         return f"Error: {err}"
 
 
+def remove_start_times(start_time):
+    try:
+        logger.info(f"Try remove start time: {start_time}")
+        conn = sqlite3.connect(db_path())
+        c = conn.cursor()
+        c.execute(f"Select value FROM settings WHERE name = 'start_times'")
+        data = c.fetchone()
+        start_times = data[0]
+        result_start_times = []
+        for time in start_times.split(','):
+            if time == start_time:
+                start_time = ''
+                continue
+            else:
+                result_start_times.append(time)
+        start_times = ','.join(result_start_times)
+        c.execute(f'UPDATE settings SET "value"="{start_times}" WHERE name = "start_times"')
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.OperationalError as err:
+        logger.error(f"Error: {err}")
+        return f"Error: {err}"
+
+
 if __name__ == '__main__':
     pass
