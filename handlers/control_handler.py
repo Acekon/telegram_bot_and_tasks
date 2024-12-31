@@ -95,6 +95,8 @@ It will display information about the number of messages,
 <b>8. Admin control panel:</b>
 - The Admin Control Panel allows you to manage administrators and change the publication schedule using the `/control`.
 - You can add new administrators, remove existing ones, and configure the timing of messages.
+- You can also reset the history of image sending and change the chat ID for sending messages.
+- Edit the list of start times to configure when messages are sent.
 
 <b>9. Starting the Bot:</b>
 - When you start a chat with the bot, it will greet you. However, this bot seems to have permission settings,
@@ -139,7 +141,7 @@ async def command_control(message: Message):
         [types.InlineKeyboardButton(text="Reset sending message", callback_data=f'reset')],
         [types.InlineKeyboardButton(text="Edit which chat to send to", callback_data=f'sendto_main')],
         [types.InlineKeyboardButton(text="Edit start times", callback_data=f'start_times')],
-        [types.InlineKeyboardButton(text="🔴 Reset all history send", callback_data=f'history_reset')],
+        [types.InlineKeyboardButton(text="🔴 Reset all history image sending", callback_data=f'history_reset')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     sendto = get_sendto()
@@ -333,8 +335,10 @@ async def command_mess_search(message: Message, state: FSMContext):
             await message.answer(reply_markup=keyboard,
                                  text=f'ValueError: Is enter not support time <code>{time}</code>\n'
                                       f'example <b>12:00</b>')
+            return await state.clear()
     except ValueError:
         await message.answer('ValueError: required\n<b>12:00</b>')
+        return await state.clear()
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith('remove_list_start_time'))

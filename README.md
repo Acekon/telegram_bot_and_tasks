@@ -1,4 +1,4 @@
-# Telegram Message Bot - v0.4.2
+# Telegram Message Bot - v0.4.3
 
 This repository contains a Telegram bot script that allows you to send messages and images to a chat at specified
 intervals using the Telegram Bot API. The bot is built using Python and utilizes the Aiogram library.
@@ -54,8 +54,11 @@ Replace `YOUR_TELEGRAM_BOT_TOKEN` with your Telegram bot token.
   
   #Add admin chat ID respectively
   python ai_mess_bot.py --createadmin 123456789,NameAdmin
-  
   ```
+# Add start times is sending messages
+Use command `/control` you bot, callback button `edit start times` and enter the time in the format `HH:MM` (24-hour format).
+Recommend use callback button `Reset all history image sending` script generate new service json file in img dir.
+
 
 ## Functionality
 
@@ -80,7 +83,7 @@ The bot provides several commands to manage messages:
 - `/upload`: Add new IMG for ID message, possible multi upload.
 - `/search`: Search message search by keyword return list ID messages.
 - `/status`: Return status sending.
-- `/control`: Change admin list, add & remove Send to chanel ID.
+- `/control`: Change admin list, add & remove Send to chanel ID, add & remove start times, Reset all history image sending.
 - Callback queries: The bot provides inline keyboard buttons for message management, such as removing a message,
   removing associated images, and replacing the message.
 
