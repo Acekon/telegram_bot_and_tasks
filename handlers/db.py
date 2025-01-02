@@ -66,9 +66,15 @@ def get_message_id(mess_id):
 
 def add_message(text_message):
     try:
+        if not text_message:
+            return f"Error: Empty message"
+        if len(text_message) > 4096:
+            return f"Error: Message too long"
+        if text_message[0] == '/':
+            return f"Error: Send is command"
+        text_message = text_message.replace("'", '`')
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        text_message = text_message.replace("'", '`')
         c.execute(
             f"INSERT INTO messages (text_message, enable) VALUES ('{text_message}', '1')")
         conn.commit()
@@ -250,6 +256,12 @@ def message_enable(message_id):
 
 def message_update_text(message_id, mess_text: str):
     try:
+        if not mess_text:
+            return f"Error: Empty message"
+        if len(mess_text) > 4096:
+            return f"Error: Message too long"
+        if mess_text[0] == '/':
+            return f"Error: Send is command"
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
         mess_text = mess_text.replace("'", '`')

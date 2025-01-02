@@ -1,7 +1,6 @@
 import time
 
 from aiogram import Router, types
-
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, FSInputFile, InlineKeyboardMarkup, CallbackQuery
@@ -44,8 +43,10 @@ class FormReplaceMess(StatesGroup):
 @router.message(Command(commands=['search']))
 @auth_admin
 async def command_get_search(message: Message, state: FSMContext):
+    kb = [[types.InlineKeyboardButton(text="Cancel", callback_data='clear_sate')]]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     await state.set_state(FormSearchText.mess_search_text)
-    await message.answer(f"Enter string for search")
+    await message.answer(f"Enter string for search", reply_markup=keyboard)
 
 
 @router.message(FormSearchText.mess_search_text)
@@ -232,8 +233,10 @@ async def process_mess_replace(message: Message, state: FSMContext):
 @router.message(Command(commands=['create']))
 @auth_admin
 async def command_add_message(message: Message, state: FSMContext):
+    kb = [[types.InlineKeyboardButton(text="Cancel", callback_data='clear_sate')]]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     await state.set_state(FormAddMess.text_message)
-    await message.answer(f"Enter new message from save")
+    await message.answer(f"Enter new message from save", reply_markup=keyboard)
 
 
 @router.message(FormAddMess.text_message)
@@ -250,8 +253,10 @@ async def process_mess_add(message: Message, state: FSMContext):
 @auth_admin
 async def command_upload_image(message: Message, state: FSMContext):
     FormGetIdImg.mess_text = None
+    kb = [[types.InlineKeyboardButton(text="Cancel", callback_data='clear_sate')]]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     await state.set_state(FormGetIdImg.mess_id)
-    await message.answer(f"Upload file and Enter ID message:")
+    await message.answer(f"Upload file and Enter ID message:", reply_markup=keyboard)
 
 
 @router.message(FormGetIdImg.mess_id)
@@ -276,3 +281,11 @@ async def process_control_admins(callback_query: CallbackQuery):
     kb = []
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
     await callback_query.message.edit_reply_markup(reply_markup=keyboard)
+
+
+@router.callback_query(lambda c: c.data == 'clear_sate')
+@auth_admin
+async def process_clear_sate(callback_query: CallbackQuery, state: FSMContext):
+    await callback_query.message.delete()
+    await state.clear()
+    await callback_query.message.answer('Canceled')
