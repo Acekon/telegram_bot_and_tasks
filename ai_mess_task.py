@@ -4,6 +4,7 @@ import random
 import sqlite3
 import sys
 import time
+import threading
 
 import requests
 import schedule
@@ -58,8 +59,7 @@ def send_manual_message(message_id):
     channel_id = get_sendto()[0]
     conn = sqlite3.connect(db_path())
     c = conn.cursor()
-    sql_query= f'SELECT text_message FROM messages WHERE ids ={message_id}'
-    print(sql_query)
+    sql_query = f'SELECT text_message FROM messages WHERE ids ={message_id}'
     c.execute(sql_query)
     messages_db = c.fetchone()
     img_mess = open_random_image(message_id)
@@ -98,11 +98,27 @@ def open_random_image(message_id):
     return False
 
 
-def main_run():
-    start_times = get_start_times()
-    print(f'Task will sending : {start_times}')
+def reschedule_tasks(start_times):
+    schedule.clear()
     for times in start_times:
         schedule.every().day.at(times).do(send_random_message)
+
+
+def update_start_times():
+    while True:
+        start_times = get_start_times()
+        print(f'Task will sending times: {start_times}')
+        reschedule_tasks(start_times)
+        time.sleep(60*60)
+
+
+def main_run():
+    start_times = get_start_times()
+    reschedule_tasks(start_times)
+    update_thread = threading.Thread(target=update_start_times)
+    update_thread.daemon = True
+    update_thread.start()
+
     while True:
         schedule.run_pending()
         time.sleep(1)

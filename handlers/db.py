@@ -66,9 +66,15 @@ def get_message_id(mess_id):
 
 def add_message(text_message):
     try:
+        if not text_message:
+            return f"Error: Empty message"
+        if len(text_message) > 4096:
+            return f"Error: Message too long"
+        if text_message[0] == '/':
+            return f"Error: Send is command"
+        text_message = text_message.replace("'", '`')
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        text_message = text_message.replace("'", '`')
         c.execute(
             f"INSERT INTO messages (text_message, enable) VALUES ('{text_message}', '1')")
         conn.commit()
@@ -250,6 +256,12 @@ def message_enable(message_id):
 
 def message_update_text(message_id, mess_text: str):
     try:
+        if not mess_text:
+            return f"Error: Empty message"
+        if len(mess_text) > 4096:
+            return f"Error: Message too long"
+        if mess_text[0] == '/':
+            return f"Error: Send is command"
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
         mess_text = mess_text.replace("'", '`')
@@ -276,13 +288,19 @@ def get_start_times():
         conn.commit()
         db_start_times = data.fetchone()
         if not db_start_times:
-            logger.error(f"Not Save! Error: {db_start_times}")
-            return False
+            c.execute(f"INSERT INTO settings (name) VALUES ('start_times')")
+            conn.commit()
+            data = c.execute(f'SELECT value FROM settings WHERE name = "start_times"')
+            conn.commit()
+            db_start_times = data.fetchone()
         conn.close()
         start_times = []
-        for start_time in db_start_times[0].split(','):
-            start_times.append(start_time.strip())
-        return start_times
+        if db_start_times[0]:
+            for start_time in db_start_times[0].split(','):
+                start_times.append(start_time.strip())
+            return start_times
+        else:
+            return []
     except sqlite3.OperationalError as err:
         logger.error(f"Error: {err}")
         return f"Error: {err}"
@@ -293,10 +311,13 @@ def add_start_times(start_time):
         logger.info(f"Try add start time: {start_time}")
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        c.execute(f"Select value FROM settings WHERE name = 'start_times'")
+        c.execute(f"SELECT value FROM settings WHERE name = 'start_times'")
         data = c.fetchone()
-        start_times = data[0]
-        start_times = f"{start_times},{start_time}"
+        if data[0]:
+            start_times = data[0]
+            start_times = f"{start_times},{start_time}"
+        else:
+            start_times = f"{start_time}"
         c.execute(f'UPDATE settings SET "value"="{start_times}" WHERE name = "start_times"')
         conn.commit()
         conn.close()
@@ -311,7 +332,7 @@ def remove_start_times(start_time):
         logger.info(f"Try remove start time: {start_time}")
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        c.execute(f"Select value FROM settings WHERE name = 'start_times'")
+        c.execute(f"SELECT value FROM settings WHERE name = 'start_times'")
         data = c.fetchone()
         start_times = data[0]
         result_start_times = []
