@@ -59,8 +59,7 @@ def send_manual_message(message_id):
     channel_id = get_sendto()[0]
     conn = sqlite3.connect(db_path())
     c = conn.cursor()
-    sql_query= f'SELECT text_message FROM messages WHERE ids ={message_id}'
-    print(sql_query)
+    sql_query = f'SELECT text_message FROM messages WHERE ids ={message_id}'
     c.execute(sql_query)
     messages_db = c.fetchone()
     img_mess = open_random_image(message_id)

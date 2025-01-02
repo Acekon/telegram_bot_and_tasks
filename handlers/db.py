@@ -288,13 +288,19 @@ def get_start_times():
         conn.commit()
         db_start_times = data.fetchone()
         if not db_start_times:
-            logger.error(f"Not Save! Error: {db_start_times}")
-            return False
+            c.execute(f"INSERT INTO settings (name) VALUES ('start_times')")
+            conn.commit()
+            data = c.execute(f'SELECT value FROM settings WHERE name = "start_times"')
+            conn.commit()
+            db_start_times = data.fetchone()
         conn.close()
         start_times = []
-        for start_time in db_start_times[0].split(','):
-            start_times.append(start_time.strip())
-        return start_times
+        if db_start_times[0]:
+            for start_time in db_start_times[0].split(','):
+                start_times.append(start_time.strip())
+            return start_times
+        else:
+            return []
     except sqlite3.OperationalError as err:
         logger.error(f"Error: {err}")
         return f"Error: {err}"
@@ -305,10 +311,13 @@ def add_start_times(start_time):
         logger.info(f"Try add start time: {start_time}")
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        c.execute(f"Select value FROM settings WHERE name = 'start_times'")
+        c.execute(f"SELECT value FROM settings WHERE name = 'start_times'")
         data = c.fetchone()
-        start_times = data[0]
-        start_times = f"{start_times},{start_time}"
+        if data[0]:
+            start_times = data[0]
+            start_times = f"{start_times},{start_time}"
+        else:
+            start_times = f"{start_time}"
         c.execute(f'UPDATE settings SET "value"="{start_times}" WHERE name = "start_times"')
         conn.commit()
         conn.close()
@@ -323,7 +332,7 @@ def remove_start_times(start_time):
         logger.info(f"Try remove start time: {start_time}")
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
-        c.execute(f"Select value FROM settings WHERE name = 'start_times'")
+        c.execute(f"SELECT value FROM settings WHERE name = 'start_times'")
         data = c.fetchone()
         start_times = data[0]
         result_start_times = []
