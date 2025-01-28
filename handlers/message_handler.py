@@ -22,6 +22,10 @@ class FormSearchText(StatesGroup):
     mess_search_text = State()
 
 
+class FormSendText(StatesGroup):
+    mess_send_text = State()
+
+
 class FormGetId(StatesGroup):
     mess_id = State()
 
@@ -275,6 +279,35 @@ async def process_mess_add_img(message: Message, state: FSMContext):
     return await state.clear()
 
 
+@router.message(Command(commands=['send_now']))
+@auth_admin
+async def command_send_now(message: Message, state: FSMContext):
+    kb = [[types.InlineKeyboardButton(text="Cancel", callback_data='clear_sate')]]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    await state.set_state(FormSendText.mess_send_text)
+    await message.answer(f"Enter string for preview", reply_markup=keyboard)
+
+
+@router.message(FormSendText.mess_send_text)
+@auth_admin
+async def process_mess_send_now(message: Message, state: FSMContext) -> Message:
+    kb = [[types.InlineKeyboardButton(text="Send", callback_data='send_now:'),
+           types.InlineKeyboardButton(text="Cancel", callback_data='clear_sate')]]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
+    if message.content_type == 'photo':
+        file_id = message.photo[-1].file_id
+        message_text = message.caption
+        image = download_img(bot_token=bot_token, file_id=file_id)
+        await message.answer_photo(FSInputFile(image), caption=message_text, reply_markup=keyboard)
+    elif message.content_type == 'text':
+        message_text = message.text
+        await message.answer(f"Preview:\n{message_text}", reply_markup=keyboard)
+    else:
+        await state.clear()
+        return await message.answer('⚠ Error type message')
+    await state.update_data(name=message_text)
+
+
 @router.callback_query(lambda c: c.data == 'clear_keyboard')
 @auth_admin
 async def process_control_admins(callback_query: CallbackQuery):
@@ -289,3 +322,5 @@ async def process_clear_sate(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.message.delete()
     await state.clear()
     await callback_query.message.answer('Canceled')
+
+
